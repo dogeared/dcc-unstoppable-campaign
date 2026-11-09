@@ -166,7 +166,7 @@ docker build -t unstoppable .
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| [`CI`](.github/workflows/ci.yml) | pushes to `main`, pull requests | Runs the backend (JUnit + JaCoCo) and frontend (Vitest) tests with coverage. On `main`, it publishes the badge data to the `badges` branch and creates a git tag for a new `pom.xml` version. |
+| [`CI`](.github/workflows/ci.yml) | pushes to `main`, pull requests | Runs the backend (JUnit + JaCoCo) and frontend (Vitest) tests with coverage. On `main`, it publishes the badge data to the `badges` branch, creates a git tag for a new `pom.xml` version, pushes a container image to GHCR, and calls the deploy webhook. |
 | [`Snyk`](.github/workflows/snyk.yml) | pushes to `main`, pull requests, weekly | Runs `snyk test` and `snyk code test`; fails on high or critical issues. Needs the `SNYK_TOKEN` repository secret. |
 
 ### Snyk pre-commit hook
@@ -303,3 +303,7 @@ and never touches lazy JPA associations outside a transaction.
 - Deleting a purchase restores spendable XP but intentionally does not undo a
   deck flag that the purchase set (eliminated, mastered, extra hand). Clear the
   flag from the deck editor if you want the physical state reversed too.
+
+## License
+
+Released under the [MIT License](LICENSE).
