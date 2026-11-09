@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-09
+
+### Changed
+
+- Moved the Matt Dinniman and Renegade Game Studios disclaimers from the
+  landing page into the site-wide footer, so they appear on every page.
+
 ## [0.3.0] - 2026-11-09
 
 ### Added
