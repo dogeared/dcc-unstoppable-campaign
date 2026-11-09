@@ -28,9 +28,23 @@ jobs:
           java-version: '21'
           cache: maven
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      # Frontend tests run first, before Vaadin's prepare-frontend rewrites package.json
+      - name: Install frontend test dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run frontend tests with coverage
+        id: frontend
+        continue-on-error: true
+        run: npm run test:coverage
+
       # Test failures don't stop the build, so the JaCoCo report and badges are still produced;
       # the job is failed at the end instead
-      - name: Run tests with coverage
+      - name: Run backend tests with coverage
         id: build
         continue-on-error: true
         run: mvn -B test -Dmaven.test.failure.ignore=true
@@ -53,10 +67,11 @@ jobs:
           path: |
             target/surefire-reports/
             target/site/jacoco/
+            target/frontend-coverage/
           if-no-files-found: ignore
 
       - name: Fail if the build or tests failed
-        if: steps.build.outcome == 'failure' || steps.results.outputs.tests_failed == 'true'
+        if: steps.build.outcome == 'failure' || steps.frontend.outcome == 'failure' || steps.results.outputs.tests_failed == 'true'
         run: |
           echo "::error::Build or tests failed"
           exit 1

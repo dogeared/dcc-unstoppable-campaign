@@ -1,10 +1,11 @@
-"""Build shields.io endpoint badges from the Maven build output.
+"""Build shields.io endpoint badges from the Maven and Vitest build output.
 
 Usage: python3 badges.py <out-dir>
 
-Reads surefire XML reports, the JaCoCo CSV report and the version in pom.xml, then writes
-tests.json, coverage.json and version.json to <out-dir>. Also writes `tests_failed`,
-`coverage` and `version` to $GITHUB_OUTPUT and a summary table to $GITHUB_STEP_SUMMARY.
+Reads surefire XML reports, the JaCoCo CSV report, the Vitest coverage summary and the
+version in pom.xml, then writes tests.json, backend-coverage.json,
+frontend-coverage.json and version.json to <out-dir>. Also writes the same values to
+$GITHUB_OUTPUT and a summary table to $GITHUB_STEP_SUMMARY.
 """
 import csv
 import glob
@@ -26,7 +27,7 @@ def test_counts():
     return total, failed, skipped
 
 
-def line_coverage():
+def backend_line_coverage():
     path = "target/site/jacoco/jacoco.csv"
     if not os.path.exists(path):
         return None
@@ -38,6 +39,15 @@ def line_coverage():
     return 100.0 * covered / (missed + covered) if missed + covered else None
 
 
+def frontend_line_coverage():
+    path = "target/frontend-coverage/coverage-summary.json"
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        summary = json.load(f)
+    return summary.get("total", {}).get("lines", {}).get("pct")
+
+
 def project_version():
     return ET.parse("pom.xml").getroot().findtext("m:version", namespaces=POM_NS)
 
@@ -45,7 +55,8 @@ def project_version():
 def coverage_color(pct):
     if pct is None:
         return "lightgrey"
-    for threshold, color in ((80, "brightgreen"), (60, "green"), (40, "yellow"), (20, "orange")):
+    for threshold, color in ((90, "brightgreen"), (80, "green"), (60, "yellow"),
+                             (40, "orange")):
         if pct >= threshold:
             return color
     return "red"
@@ -55,10 +66,16 @@ def badge(label, message, color):
     return {"schemaVersion": 1, "label": label, "message": message, "color": color}
 
 
+def coverage_badge(label, pct):
+    return badge(label, f"{pct:.0f}%" if pct is not None else "unknown",
+                 coverage_color(round(pct) if pct is not None else None))
+
+
 def main(out_dir):
     total, failed, skipped = test_counts()
     passed = total - failed - skipped
-    coverage = line_coverage()
+    backend = backend_line_coverage()
+    frontend = frontend_line_coverage()
     version = project_version()
 
     if total == 0:
@@ -66,13 +83,14 @@ def main(out_dir):
     elif failed:
         tests = badge("tests", f"{failed} failed, {passed} passed", "red")
     else:
-        tests = badge("tests", f"{passed} passed" + (f", {skipped} skipped" if skipped else ""), "brightgreen")
+        tests = badge("tests", f"{passed} passed" + (f", {skipped} skipped" if skipped else ""),
+                      "brightgreen")
 
     badges = {
         "tests.json": tests,
         # Color by the rounded value so the badge text and color agree
-        "coverage.json": badge("coverage", f"{coverage:.0f}%" if coverage is not None else "unknown",
-                               coverage_color(round(coverage) if coverage is not None else None)),
+        "backend-coverage.json": coverage_badge("backend coverage", backend),
+        "frontend-coverage.json": coverage_badge("frontend coverage", frontend),
         "version.json": badge("version", version, "blue"),
     }
 
@@ -85,13 +103,19 @@ def main(out_dir):
         with open(os.environ["GITHUB_OUTPUT"], "a") as f:
             # No results at all means the build broke before tests ran
             f.write(f"tests_failed={'true' if failed or total == 0 else 'false'}\n")
-            f.write(f"coverage={coverage:.1f}\n" if coverage is not None else "coverage=\n")
+            f.write(f"backend_coverage={backend:.1f}\n" if backend is not None
+                    else "backend_coverage=\n")
+            f.write(f"frontend_coverage={frontend:.1f}\n" if frontend is not None
+                    else "frontend_coverage=\n")
             f.write(f"version={version}\n")
 
     if "GITHUB_STEP_SUMMARY" in os.environ:
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
-            f.write("| Tests | Line coverage | Version |\n|---|---|---|\n")
-            f.write(f"| {tests['message']} | {badges['coverage.json']['message']} | {version} |\n")
+            f.write("| Tests | Backend coverage | Frontend coverage | Version |\n")
+            f.write("|---|---|---|---|\n")
+            f.write(f"| {tests['message']} | "
+                    f"{badges['backend-coverage.json']['message']} | "
+                    f"{badges['frontend-coverage.json']['message']} | {version} |\n")
 
 
 if __name__ == "__main__":
