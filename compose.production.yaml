@@ -58,7 +58,7 @@ networks:
   default:
   shared:
     external: true
-    name: ${SHARED_NETWORK:-tnra-shared}
+    name: ${SHARED_NETWORK:-nas-shared}
 
 volumes:
   unstoppable-pg:

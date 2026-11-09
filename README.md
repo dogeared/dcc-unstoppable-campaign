@@ -193,7 +193,7 @@ Production uses:
 
 - `dcc-unstoppable.dogeared.dev` for the app
 - `auth.dogeared.dev` for the central Keycloak
-- the shared Docker network `tnra-shared`
+- the shared Docker network `nas-shared`
 - `compose.production.yaml`
 
 ### 1. Prepare the database and environment
