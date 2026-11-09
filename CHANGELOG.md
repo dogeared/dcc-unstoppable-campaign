@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-09
+
+### Added
+
+- Viewers and editors can remove a campaign that was shared with them from
+  their campaign list. The card shows a "Remove from list" action with a
+  confirmation dialog. Campaign data is untouched, and the user can rejoin
+  later with a new invite link.
+
+### Changed
+
+- The local development section of the README now describes how to configure
+  any OpenID Connect provider instead of documenting the author's private
+  Keycloak and reverse-proxy setup. Keycloak is mentioned as the author's
+  provider, with a link to the project.
+
 ## [0.1.8] - 2026-11-09
 
 ### Fixed
