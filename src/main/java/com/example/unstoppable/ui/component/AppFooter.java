@@ -9,8 +9,9 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Site-wide footer: a short credit line linking to the author's GitHub profile
- * and the release version recorded in the build metadata.
+ * Site-wide footer: a short credit line linking to the author's GitHub profile,
+ * the release version recorded in the build metadata, and the project's
+ * copyright disclaimers.
  */
 public class AppFooter extends Footer {
 
@@ -38,7 +39,17 @@ public class AppFooter extends Footer {
         Span version = new Span("v" + resolveVersion());
         version.addClassName("app-footer-version");
 
-        add(made, version);
+        Span disclaimers = new Span();
+        disclaimers.addClassName("app-footer-disclaimers");
+        Span dinniman = new Span("An unofficial companion. "
+                + "Dungeon Crawler Carl is © and ™ Matt Dinniman, LLC.");
+        dinniman.addClassName("app-footer-disclaimer");
+        Span renegade = new Span("Dungeon Crawler Carl: Unstoppable is "
+                + "© 2026 Renegade Game Studios.");
+        renegade.addClassName("app-footer-disclaimer");
+        disclaimers.add(dinniman, renegade);
+
+        add(made, version, disclaimers);
     }
 
     /**

@@ -192,6 +192,17 @@ p {
   text-transform: uppercase;
 }
 
+.app-footer-disclaimers {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.app-footer-disclaimer {
+  display: block;
+}
+
 .landing-view .app-footer,
 .join-view .app-footer {
   max-width: 760px;
@@ -1343,18 +1354,6 @@ vaadin-integer-field {
     var(--u-accent) 50%,
     var(--u-gold-line) 80%,
     transparent);
-}
-
-.landing-footer {
-  color: var(--u-faint);
-  font-family: var(--u-serif);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-  line-height: 1.5;
-}
-
-.landing-footer span {
-  display: block;
 }
 
 .join-view {

@@ -18,6 +18,11 @@ class AppFooterTest {
         assertTrue(footer.getClassNames().contains("app-footer"));
         assertTrue(footer.getElement().getTextRecursively().contains("Made with"));
         assertTrue(footer.getElement().getTextRecursively().contains("dogeared"));
+        assertTrue(footer.getElement().getTextRecursively()
+                .contains("Dungeon Crawler Carl is © and ™ Matt Dinniman, LLC."));
+        assertTrue(footer.getElement().getTextRecursively()
+                .contains("Dungeon Crawler Carl: Unstoppable is "
+                        + "© 2026 Renegade Game Studios."));
 
         Element author = descendants(footer.getElement())
                 .filter(element -> !element.isTextNode())
