@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-11-09
+
+### Changed
+
+- Production host is now `dcc-unstoppable-campaign.dogeared.dev` in the
+  production Keycloak realm, the production compose file, and the deployment
+  docs, matching the Cloudflare tunnel hostname and the repository name.
+
 ## [0.1.4] - 2026-11-08
 
 ### Fixed
