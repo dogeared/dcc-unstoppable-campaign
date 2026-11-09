@@ -40,6 +40,15 @@ class AppFooterTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals("v" + AppFooter.resolveVersion(), version.getText());
+
+        Element matt = descendants(footer.getElement())
+                .filter(element -> !element.isTextNode())
+                .filter(element -> element.getClassList()
+                        .contains("app-footer-disclaimer-matt"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("An unofficial companion.\n"
+                + "Dungeon Crawler Carl is © and ™ Matt Dinniman, LLC.", matt.getText());
     }
 
     @Test

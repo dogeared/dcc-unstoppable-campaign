@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-09
+
+### Changed
+
+- When the footer disclaimers wrap, they now break into three deliberate
+  lines: the unofficial-companion notice, the Matt Dinniman notice, and the
+  Renegade Game Studios notice. Long lines still wrap as needed.
+
 ## [0.3.2] - 2026-11-09
 
 ### Changed

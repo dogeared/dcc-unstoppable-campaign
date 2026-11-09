@@ -1372,6 +1372,17 @@ vaadin-integer-field {
 
 /* ------------------------------------------------------------------ mobile */
 
+@media (max-width: 1150px) {
+  .app-footer-disclaimers {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .app-footer-disclaimer-matt {
+    white-space: pre-line;
+  }
+}
+
 @media (max-width: 860px) {
   .app-nav {
     display: none;

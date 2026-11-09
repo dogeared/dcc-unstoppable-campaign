@@ -152,7 +152,7 @@ mvn -Pproduction package
 ```
 
 The production profile builds the Vaadin frontend bundle. The resulting jar is
-`target/unstoppable-0.3.2.jar`.
+`target/unstoppable-0.3.3.jar`.
 
 The Docker image is a two-stage build (Maven build, then Temurin 21 JRE):
 
