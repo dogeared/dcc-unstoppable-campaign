@@ -31,6 +31,9 @@ public class CampaignInvite {
     @Column(nullable = false, length = 16)
     private AccessRole role;
 
+    @Column(name = "public_access", nullable = false)
+    private boolean publicAccess;
+
     @Column(name = "created_by_sub", nullable = false, length = 128)
     private String createdBySub;
 
@@ -48,22 +51,34 @@ public class CampaignInvite {
     }
 
     public CampaignInvite(Campaign campaign, String tokenHash, AccessRole role,
-            String createdBySub, Instant expiresAt) {
+            boolean publicAccess, String createdBySub, Instant expiresAt) {
         this.id = UUID.randomUUID();
         this.campaign = campaign;
         this.tokenHash = tokenHash;
-        this.role = role;
         this.createdBySub = createdBySub;
         this.createdAt = Instant.now();
         this.expiresAt = expiresAt;
+        apply(role, publicAccess);
     }
 
     public boolean isUsable(Instant now) {
         return revokedAt == null && (expiresAt == null || expiresAt.isAfter(now));
     }
 
+    public void update(AccessRole role, boolean publicAccess) {
+        apply(role, publicAccess);
+    }
+
     public void revoke() {
         this.revokedAt = Instant.now();
+    }
+
+    private void apply(AccessRole role, boolean publicAccess) {
+        if (publicAccess && role == AccessRole.EDITOR) {
+            throw new IllegalArgumentException("Editor links must be private");
+        }
+        this.role = role;
+        this.publicAccess = publicAccess;
     }
 
     public UUID getId() {
@@ -80,6 +95,10 @@ public class CampaignInvite {
 
     public AccessRole getRole() {
         return role;
+    }
+
+    public boolean isPublicAccess() {
+        return publicAccess;
     }
 
     public String getCreatedBySub() {

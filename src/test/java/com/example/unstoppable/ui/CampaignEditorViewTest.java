@@ -5,10 +5,12 @@ import com.example.unstoppable.service.CampaignNotFoundException;
 import com.example.unstoppable.service.CampaignService;
 import com.example.unstoppable.service.CurrentUser;
 import com.example.unstoppable.service.InviteService;
+import com.example.unstoppable.service.InviteView;
 import com.vaadin.browserless.SpringBrowserlessTest;
 import com.vaadin.browserless.ViewPackages;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -30,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -125,8 +128,11 @@ class CampaignEditorViewTest extends SpringBrowserlessTest {
 
         test(find(TabSheet.class).first()).select("Share");
         Grid invites = gridWithHeader("Role");
-        Component revokeCell = test(invites).renderCellComponent(0, 4);
-        test((Button) revokeCell).click();
+        Component inviteActions = test(invites).renderCellComponent(0, 5);
+        Button revokeButtonInCell = find(Button.class, inviteActions).all().stream()
+                .filter(button -> "Revoke".equals(button.getText()))
+                .findFirst().orElseThrow();
+        test(revokeButtonInCell).click();
         Dialog revoke = find(Dialog.class).all().stream()
                 .filter(dialog -> "Revoke this link?".equals(dialog.getHeaderTitle()))
                 .findFirst().orElseThrow();
@@ -192,7 +198,7 @@ class CampaignEditorViewTest extends SpringBrowserlessTest {
             reloads.incrementAndGet();
             return UiFixtures.richSheet(AccessRole.OWNER);
         });
-        when(inviteService.create(any(), any(), any(), anyInt()))
+        when(inviteService.create(any(), any(), any(), anyBoolean(), anyInt()))
                 .thenReturn(new InviteService.CreatedInvite("token-1",
                         UiFixtures.invite(true)));
 
@@ -201,8 +207,8 @@ class CampaignEditorViewTest extends SpringBrowserlessTest {
         test(find(TabSheet.class).first()).select("Share");
         test(button("Create invite link")).click();
 
-        verify(inviteService).create(eq(UiFixtures.CAMPAIGN_ID), eq("owner"), any(),
-                anyInt());
+        verify(inviteService).create(eq(UiFixtures.CAMPAIGN_ID), eq("owner"),
+                eq(AccessRole.VIEWER), eq(false), anyInt());
         Dialog link = find(Dialog.class).all().stream()
                 .filter(dialog -> "Invite link ready".equals(dialog.getHeaderTitle()))
                 .findFirst().orElseThrow();
@@ -230,6 +236,83 @@ class CampaignEditorViewTest extends SpringBrowserlessTest {
                 .findFirst().orElseThrow();
 
         assertEquals(AccessRole.VIEWER, role.getValue());
+    }
+
+    @Test
+    void shareTabDefaultsToPrivateViewerLinks() {
+        when(inviteService.list(any(), any())).thenReturn(List.of());
+        openEditor(new CampaignSheetFixture(UiFixtures.richSheet(AccessRole.OWNER)));
+
+        test(find(TabSheet.class).first()).select("Share");
+        ComboBox<?> role = find(ComboBox.class).all().stream()
+                .filter(combo -> "Role".equals(combo.getLabel()))
+                .findFirst().orElseThrow();
+        Checkbox publicLink = find(Checkbox.class).all().stream()
+                .filter(box -> "Public link".equals(box.getLabel()))
+                .findFirst().orElseThrow();
+
+        assertEquals(AccessRole.VIEWER, role.getValue());
+        assertFalse(publicLink.getValue());
+        assertTrue(publicLink.isEnabled());
+    }
+
+    @Test
+    void choosingTheEditorRoleClearsAndLocksPublicVisibility() {
+        when(inviteService.list(any(), any())).thenReturn(List.of());
+        openEditor(new CampaignSheetFixture(UiFixtures.richSheet(AccessRole.OWNER)));
+
+        test(find(TabSheet.class).first()).select("Share");
+        ComboBox<AccessRole> role = find(ComboBox.class).all().stream()
+                .filter(combo -> "Role".equals(combo.getLabel()))
+                .findFirst().map(combo -> (ComboBox<AccessRole>) combo)
+                .orElseThrow();
+        Checkbox publicLink = find(Checkbox.class).all().stream()
+                .filter(box -> "Public link".equals(box.getLabel()))
+                .findFirst().orElseThrow();
+
+        publicLink.setValue(true);
+        role.setValue(AccessRole.EDITOR);
+
+        assertFalse(publicLink.isEnabled());
+        assertFalse(publicLink.getValue());
+
+        role.setValue(AccessRole.VIEWER);
+        assertTrue(publicLink.isEnabled());
+    }
+
+    @Test
+    void shareGridShowsVisibilityAndEditsAnExistingLink() {
+        InviteView invite = UiFixtures.invite(true);
+        when(inviteService.list(any(), any())).thenReturn(List.of(invite));
+        openEditor(new CampaignSheetFixture(UiFixtures.richSheet(AccessRole.OWNER)));
+
+        test(find(TabSheet.class).first()).select("Share");
+        Grid invites = gridWithHeader("Role");
+        Component visibility = test(invites).renderCellComponent(0, 1);
+        assertEquals("private", ((com.vaadin.flow.component.html.Span) visibility).getText());
+
+        Component inviteActions = test(invites).renderCellComponent(0, 5);
+        Button edit = find(Button.class, inviteActions).all().stream()
+                .filter(button -> "Edit".equals(button.getText()))
+                .findFirst().orElseThrow();
+        test(edit).click();
+
+        Dialog dialog = find(Dialog.class).all().stream()
+                .filter(open -> "Edit invite link".equals(open.getHeaderTitle()))
+                .findFirst().orElseThrow();
+        ComboBox<AccessRole> role = find(ComboBox.class, dialog).first();
+        assertEquals(AccessRole.EDITOR, role.getValue());
+
+        role.setValue(AccessRole.VIEWER);
+        Checkbox publicLink = find(Checkbox.class, dialog).first();
+        publicLink.setValue(true);
+        Button save = find(Button.class, dialog).all().stream()
+                .filter(button -> "Save".equals(button.getText()))
+                .findFirst().orElseThrow();
+        test(save).click();
+
+        verify(inviteService).update(eq(UiFixtures.CAMPAIGN_ID), eq("owner"),
+                eq(invite.id()), eq(AccessRole.VIEWER), eq(true));
     }
 
     @Test

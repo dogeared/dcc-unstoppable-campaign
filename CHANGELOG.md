@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-09
+
+### Added
+
+- Share links can now be public or private. Private is the default; public
+  links can be opened without signing in and render the sheet read-only.
+- Owners can edit an existing link to change its role or visibility without
+  changing the URL. Editor links are always private.
+
 ## [0.3.3] - 2026-11-09
 
 ### Changed

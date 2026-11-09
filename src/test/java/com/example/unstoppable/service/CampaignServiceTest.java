@@ -303,6 +303,26 @@ class CampaignServiceTest {
     }
 
     @Test
+    void loadPublicReportsViewerWithoutMembershipCheck() {
+        when(campaigns.findById(campaign.getId())).thenReturn(Optional.of(campaign));
+        when(participants.findByCampaignIdOrderBySeat(campaign.getId())).thenReturn(List.of());
+        when(attempts.findByCampaignIdOrderByPlayedAtDescFloorNumberAsc(campaign.getId()))
+                .thenReturn(List.of());
+        when(achievements.findByCampaignIdOrderByFloorNumberAscNameAsc(campaign.getId()))
+                .thenReturn(List.of());
+        when(floorProgress.findByCampaignIdOrderByFloorNumber(campaign.getId()))
+                .thenReturn(List.of());
+        when(purchases.findByCampaignIdOrderByPurchasedAtDesc(campaign.getId()))
+                .thenReturn(List.of());
+
+        CampaignSheet sheet = service.loadPublic(campaign.getId());
+
+        assertEquals(AccessRole.VIEWER, sheet.role());
+        assertFalse(sheet.canEdit());
+        verify(access, never()).requireReadable(any(), any());
+    }
+
+    @Test
     void loadFallsBackWhenParticipantIsMissing() {
         Purchase orphan = new Purchase(campaign, p1, Benefit.ELIMINATE_STARTING, 5, null,
                 null, null, null, null);

@@ -165,7 +165,7 @@ class DomainTest {
     @Test
     void inviteUsabilityAndRevocation() {
         Instant now = Instant.now();
-        CampaignInvite forever = new CampaignInvite(campaign, "hash", AccessRole.VIEWER,
+        CampaignInvite forever = new CampaignInvite(campaign, "hash", AccessRole.VIEWER, false,
                 "owner", null);
         assertNotNull(forever.getId());
         assertSame(campaign, forever.getCampaign());
@@ -176,12 +176,20 @@ class DomainTest {
         assertNull(forever.getExpiresAt());
         assertNull(forever.getRevokedAt());
         assertTrue(forever.isUsable(now));
+        assertFalse(forever.isPublicAccess());
 
-        CampaignInvite expired = new CampaignInvite(campaign, "hash2", AccessRole.EDITOR,
+        CampaignInvite publicLink = new CampaignInvite(campaign, "hash4", AccessRole.VIEWER,
+                true, "owner", null);
+        assertTrue(publicLink.isPublicAccess());
+        assertThrows(IllegalArgumentException.class,
+                () -> new CampaignInvite(campaign, "hash5", AccessRole.EDITOR,
+                        true, "owner", null));
+
+        CampaignInvite expired = new CampaignInvite(campaign, "hash2", AccessRole.EDITOR, false,
                 "owner", now.minusSeconds(1));
         assertFalse(expired.isUsable(now));
 
-        CampaignInvite revoked = new CampaignInvite(campaign, "hash3", AccessRole.EDITOR,
+        CampaignInvite revoked = new CampaignInvite(campaign, "hash3", AccessRole.EDITOR, false,
                 "owner", null);
         revoked.revoke();
         assertNotNull(revoked.getRevokedAt());

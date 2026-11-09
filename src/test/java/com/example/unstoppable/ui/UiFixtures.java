@@ -93,7 +93,14 @@ public final class UiFixtures {
     }
 
     public static InviteView invite(boolean usable) {
-        return new InviteView(UUID.randomUUID(), AccessRole.EDITOR,
+        return new InviteView(UUID.randomUUID(), AccessRole.EDITOR, false,
+                Instant.parse("2026-01-01T00:00:00Z"),
+                usable ? null : Instant.parse("2026-01-15T00:00:00Z"),
+                null, usable);
+    }
+
+    public static InviteView publicInvite(boolean usable) {
+        return new InviteView(UUID.randomUUID(), AccessRole.VIEWER, true,
                 Instant.parse("2026-01-01T00:00:00Z"),
                 usable ? null : Instant.parse("2026-01-15T00:00:00Z"),
                 null, usable);

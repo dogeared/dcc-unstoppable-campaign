@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -37,18 +38,42 @@ public class InviteService {
 
     @Transactional
     public CreatedInvite create(UUID campaignId, String subject, AccessRole role,
-            int validDays) {
+            boolean publicAccess, int validDays) {
         var campaignAccess = access.requireOwner(campaignId, subject);
-        if (role == AccessRole.OWNER) {
-            throw new IllegalArgumentException("Invites cannot grant ownership");
-        }
+        requireGrantableRole(role);
         String token = newToken();
         Instant expiresAt = validDays > 0
                 ? Instant.now().plus(validDays, ChronoUnit.DAYS)
                 : null;
         CampaignInvite invite = invites.save(new CampaignInvite(
-                campaignAccess.campaign(), hash(token), role, subject, expiresAt));
+                campaignAccess.campaign(), hash(token), role, publicAccess,
+                subject, expiresAt));
         return new CreatedInvite(token, view(invite));
+    }
+
+    /**
+     * Changes an existing link's role and visibility. The token itself, and so
+     * the URL, never changes. Editor links must stay private.
+     */
+    @Transactional
+    public void update(UUID campaignId, String subject, UUID inviteId,
+            AccessRole role, boolean publicAccess) {
+        access.requireOwner(campaignId, subject);
+        CampaignInvite invite = requireInvite(campaignId, inviteId);
+        requireGrantableRole(role);
+        invite.update(role, publicAccess);
+    }
+
+    /**
+     * Resolves a link without granting access. Used by the join view to decide
+     * whether an anonymous visitor may read the sheet in place.
+     */
+    @Transactional(readOnly = true)
+    public Optional<InviteTarget> preview(String token) {
+        return invites.findByTokenHash(hash(token))
+                .filter(invite -> invite.isUsable(Instant.now()))
+                .map(invite -> new InviteTarget(invite.getCampaign().getId(),
+                        invite.getRole(), invite.isPublicAccess()));
     }
 
     @Transactional
@@ -62,12 +87,7 @@ public class InviteService {
     @Transactional
     public void revoke(UUID campaignId, String subject, UUID inviteId) {
         access.requireOwner(campaignId, subject);
-        CampaignInvite invite = invites.findById(inviteId)
-                .orElseThrow(() -> new IllegalArgumentException("Invite not found"));
-        if (!invite.getCampaign().getId().equals(campaignId)) {
-            throw new IllegalArgumentException("Invite belongs to another campaign");
-        }
-        invite.revoke();
+        requireInvite(campaignId, inviteId).revoke();
     }
 
     /**
@@ -91,9 +111,24 @@ public class InviteService {
         return campaignId;
     }
 
+    private CampaignInvite requireInvite(UUID campaignId, UUID inviteId) {
+        CampaignInvite invite = invites.findById(inviteId)
+                .orElseThrow(() -> new IllegalArgumentException("Invite not found"));
+        if (!invite.getCampaign().getId().equals(campaignId)) {
+            throw new IllegalArgumentException("Invite belongs to another campaign");
+        }
+        return invite;
+    }
+
+    private static void requireGrantableRole(AccessRole role) {
+        if (role == AccessRole.OWNER) {
+            throw new IllegalArgumentException("Invites cannot grant ownership");
+        }
+    }
+
     private InviteView view(CampaignInvite invite) {
-        return new InviteView(invite.getId(), invite.getRole(), invite.getCreatedAt(),
-                invite.getExpiresAt(), invite.getRevokedAt(),
+        return new InviteView(invite.getId(), invite.getRole(), invite.isPublicAccess(),
+                invite.getCreatedAt(), invite.getExpiresAt(), invite.getRevokedAt(),
                 invite.isUsable(Instant.now()));
     }
 
@@ -114,5 +149,11 @@ public class InviteService {
     }
 
     public record CreatedInvite(String token, InviteView view) {
+    }
+
+    /**
+     * A usable link's destination without any membership change.
+     */
+    public record InviteTarget(UUID campaignId, AccessRole role, boolean publicAccess) {
     }
 }

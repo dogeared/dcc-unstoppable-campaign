@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,6 +61,7 @@ class UiViewsTest extends SpringBrowserlessTest {
         lenient().when(currentUser.initials()).thenReturn("MS");
         lenient().when(currentUser.displayName()).thenReturn("Micah Silverman");
         lenient().when(currentUser.username()).thenReturn("micah");
+        lenient().when(currentUser.isAuthenticated()).thenReturn(true);
     }
 
     @Test
@@ -196,6 +198,48 @@ class UiViewsTest extends SpringBrowserlessTest {
 
         verify(inviteService).accept("token-1", "owner");
         assertEquals("The Brave", find(H1.class).first().getText());
+    }
+
+    @Test
+    void joinViewRendersAPublicInviteInlineForAnonymousVisitors() {
+        UUID campaignId = UUID.randomUUID();
+        when(currentUser.isAuthenticated()).thenReturn(false);
+        when(inviteService.preview("public-token")).thenReturn(java.util.Optional.of(
+                new InviteService.InviteTarget(campaignId, AccessRole.VIEWER, true)));
+        when(campaignService.loadPublic(campaignId))
+                .thenReturn(UiFixtures.richSheet(AccessRole.VIEWER));
+
+        navigate(JoinView.class, Map.of("token", "public-token"));
+
+        assertEquals("The Brave", find(H1.class).first().getText());
+        verify(inviteService, never()).accept(any(), any());
+        assertTrue(find(com.vaadin.flow.component.html.Span.class).all().stream()
+                .anyMatch(span -> "Shared campaign sheet".equals(span.getText())));
+        assertTrue(find(Anchor.class).all().stream()
+                .noneMatch(anchor -> "Edit sheet".equals(anchor.getText())));
+    }
+
+    @Test
+    void joinViewSendsAnonymousVisitorsToLoginForPrivateInvites() {
+        when(currentUser.isAuthenticated()).thenReturn(false);
+        when(inviteService.preview("private-token")).thenReturn(java.util.Optional.of(
+                new InviteService.InviteTarget(UUID.randomUUID(), AccessRole.VIEWER, false)));
+
+        navigate(JoinView.class, Map.of("token", "private-token"));
+
+        verify(inviteService, never()).accept(any(), any());
+        verify(campaignService, never()).loadPublic(any());
+        assertTrue(find(H1.class).all().isEmpty());
+    }
+
+    @Test
+    void joinViewTellsAnonymousVisitorsWhenTheLinkIsDead() {
+        when(currentUser.isAuthenticated()).thenReturn(false);
+        when(inviteService.preview("dead-token")).thenReturn(java.util.Optional.empty());
+
+        navigate(JoinView.class, Map.of("token", "dead-token"));
+
+        assertEquals("That link did not work.", find(H1.class).first().getText());
     }
 
     @Test

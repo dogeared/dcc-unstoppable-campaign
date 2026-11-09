@@ -53,7 +53,7 @@ class InviteServiceLifecycleTest {
     @Test
     void createHashesTheTokenAndReturnsItOnce() {
         InviteService.CreatedInvite created = service.create(campaign.getId(), "owner",
-                AccessRole.EDITOR, 7);
+                AccessRole.EDITOR, false, 7);
 
         assertThat(created.token()).isNotBlank();
         assertThat(created.view().role()).isEqualTo(AccessRole.EDITOR);
@@ -70,11 +70,11 @@ class InviteServiceLifecycleTest {
     @Test
     void createWithoutExpiryAndWithoutOwnership() {
         InviteService.CreatedInvite created = service.create(campaign.getId(), "owner",
-                AccessRole.VIEWER, 0);
+                AccessRole.VIEWER, false, 0);
 
         assertThat(created.view().expiresAt()).isNull();
         assertThatThrownBy(() -> service.create(campaign.getId(), "owner",
-                AccessRole.OWNER, 0))
+                AccessRole.OWNER, false, 0))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ownership");
         verify(invites, times(1)).save(any());
@@ -82,7 +82,7 @@ class InviteServiceLifecycleTest {
 
     @Test
     void listMapsInvitesAndRequiresOwner() {
-        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.VIEWER,
+        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.VIEWER, false,
                 "owner", null);
         when(invites.findByCampaignIdOrderByCreatedAtDesc(campaign.getId()))
                 .thenReturn(List.of(invite));
@@ -96,7 +96,7 @@ class InviteServiceLifecycleTest {
 
     @Test
     void revokeValidatesCampaignAndRevokes() {
-        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.VIEWER,
+        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.VIEWER, false,
                 "owner", null);
         when(invites.findById(invite.getId())).thenReturn(Optional.of(invite));
 
@@ -111,7 +111,7 @@ class InviteServiceLifecycleTest {
     @Test
     void revokeRejectsInviteFromAnotherCampaign() {
         Campaign other = new Campaign("other", "Other", Difficulty.NORMAL);
-        CampaignInvite invite = new CampaignInvite(other, "hash", AccessRole.VIEWER,
+        CampaignInvite invite = new CampaignInvite(other, "hash", AccessRole.VIEWER, false,
                 "owner", null);
         when(invites.findById(invite.getId())).thenReturn(Optional.of(invite));
 
@@ -122,7 +122,7 @@ class InviteServiceLifecycleTest {
 
     @Test
     void acceptCreatesMembershipForNewUser() {
-        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.EDITOR,
+        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.EDITOR, false,
                 "owner", null);
         when(invites.findByTokenHash(InviteService.hash("hash"))).thenReturn(Optional.of(invite));
         when(memberships.findByCampaignIdAndSubject(campaign.getId(), "subject"))
@@ -139,7 +139,7 @@ class InviteServiceLifecycleTest {
 
     @Test
     void acceptElevatesAnExistingViewer() {
-        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.EDITOR,
+        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.EDITOR, false,
                 "owner", null);
         CampaignMembership membership = new CampaignMembership(campaign, "subject",
                 AccessRole.VIEWER);
@@ -160,19 +160,68 @@ class InviteServiceLifecycleTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not valid");
 
-        CampaignInvite expired = new CampaignInvite(campaign, "expired", AccessRole.EDITOR,
+        CampaignInvite expired = new CampaignInvite(campaign, "expired", AccessRole.EDITOR, false,
                 "owner", Instant.now().minusSeconds(60));
         when(invites.findByTokenHash(InviteService.hash("expired"))).thenReturn(Optional.of(expired));
         assertThatThrownBy(() -> service.accept("expired", "subject"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("expired");
 
-        CampaignInvite revoked = new CampaignInvite(campaign, "revoked", AccessRole.EDITOR,
+        CampaignInvite revoked = new CampaignInvite(campaign, "revoked", AccessRole.EDITOR, false,
                 "owner", null);
         revoked.revoke();
         when(invites.findByTokenHash(InviteService.hash("revoked"))).thenReturn(Optional.of(revoked));
         assertThatThrownBy(() -> service.accept("revoked", "subject"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("revoked");
+    }
+
+    @Test
+    void createAllowsPublicViewerLinksAndRejectsPublicEditors() {
+        InviteService.CreatedInvite created = service.create(campaign.getId(), "owner",
+                AccessRole.VIEWER, true, 0);
+
+        assertThat(created.view().publicAccess()).isTrue();
+        assertThatThrownBy(() -> service.create(campaign.getId(), "owner",
+                AccessRole.EDITOR, true, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be private");
+    }
+
+    @Test
+    void updateChangesRoleAndVisibilityWithoutChangingTheToken() {
+        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.VIEWER, false,
+                "owner", null);
+        when(invites.findById(invite.getId())).thenReturn(Optional.of(invite));
+
+        service.update(campaign.getId(), "owner", invite.getId(), AccessRole.VIEWER, true);
+        assertThat(invite.isPublicAccess()).isTrue();
+        assertThat(invite.getTokenHash()).isEqualTo("hash");
+
+        service.update(campaign.getId(), "owner", invite.getId(), AccessRole.EDITOR, false);
+        assertThat(invite.getRole()).isEqualTo(AccessRole.EDITOR);
+        assertThat(invite.isPublicAccess()).isFalse();
+        assertThatThrownBy(() -> service.update(campaign.getId(), "owner", invite.getId(),
+                AccessRole.EDITOR, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be private");
+    }
+
+    @Test
+    void previewResolvesUsableLinksWithoutGrantingMembership() {
+        CampaignInvite invite = new CampaignInvite(campaign, "hash", AccessRole.VIEWER, true,
+                "owner", null);
+        when(invites.findByTokenHash(InviteService.hash("hash")))
+                .thenReturn(Optional.of(invite));
+
+        InviteService.InviteTarget target = service.preview("hash").orElseThrow();
+
+        assertThat(target.campaignId()).isEqualTo(campaign.getId());
+        assertThat(target.publicAccess()).isTrue();
+        assertThat(target.role()).isEqualTo(AccessRole.VIEWER);
+        verify(memberships, never()).save(any());
+
+        invite.revoke();
+        assertThat(service.preview("hash")).isEmpty();
     }
 }

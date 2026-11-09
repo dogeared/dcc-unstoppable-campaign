@@ -8,6 +8,7 @@ import com.example.unstoppable.ui.Ui;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -24,11 +25,14 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Owner-only invite management: create reusable links, review existing ones,
- * and revoke them. Shared by the editor's Share tab and the sheet's Share
- * dialog.
+ * Owner-only invite management: create reusable links, edit their role and
+ * visibility, review existing ones, and revoke them. Shared by the editor's
+ * Share tab and the sheet's Share dialog.
  */
 public class SharePanel extends Div {
+
+    static final String PUBLIC_HELPER = "Public links can be opened without signing in. "
+            + "Editor links must be private.";
 
     private final InviteService inviteService;
     private final CurrentUser currentUser;
@@ -51,24 +55,24 @@ public class SharePanel extends Div {
         card.add(new Paragraph("Invite links are reusable until you revoke them. "
                 + "Viewers can read the sheet; editors can change it."));
 
-        ComboBox<AccessRole> role = new ComboBox<>("Role");
-        role.setItems(AccessRole.VIEWER, AccessRole.EDITOR);
-        role.setItemLabelGenerator(value -> value.name().toLowerCase());
-        role.setValue(AccessRole.VIEWER);
-
+        ComboBox<AccessRole> role = roleField(AccessRole.VIEWER);
         IntegerField days = new IntegerField("Expires after (days)");
         days.setMin(0);
         days.setValue(30);
         days.setHelperText("0 means the link never expires.");
+        Checkbox publicLink = publicField(false, AccessRole.VIEWER);
+        role.addValueChangeListener(event -> syncVisibility(role.getValue(), publicLink));
 
-        FormLayout form = new FormLayout(role, days);
+        FormLayout form = new FormLayout(role, days, publicLink);
+        form.setColspan(publicLink, 2);
         form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
                 new FormLayout.ResponsiveStep("420px", 2));
 
         Button create = new Button("Create invite link", event -> {
             try {
                 InviteService.CreatedInvite invite = inviteService.create(campaignId,
-                        currentUser.id(), role.getValue(), days.getValue());
+                        currentUser.id(), role.getValue(), publicLink.getValue(),
+                        days.getValue());
                 String url = inviteLink(invite.token());
                 refreshInvites();
                 showInviteLink(url);
@@ -98,6 +102,10 @@ public class SharePanel extends Div {
         Grid<InviteView> grid = new Grid<>();
         grid.addColumn(invite -> invite.role().name().toLowerCase()).setHeader("Role")
                 .setAutoWidth(true);
+        grid.addComponentColumn(invite -> chip(
+                invite.publicAccess() ? "public" : "private",
+                invite.publicAccess() ? "chip-accent" : "chip-quiet"))
+                .setHeader("Visibility").setAutoWidth(true);
         grid.addColumn(invite -> invite.createdAt().toString().substring(0, 10))
                 .setHeader("Created").setAutoWidth(true);
         grid.addColumn(invite -> invite.expiresAt() == null ? "never"
@@ -107,6 +115,13 @@ public class SharePanel extends Div {
                 invite.usable() ? "chip-accent" : "chip-danger"))
                 .setHeader("Status").setAutoWidth(true);
         grid.addComponentColumn(invite -> {
+            Div cell = new Div();
+            cell.addClassName("invite-actions");
+
+            Button edit = new Button("Edit", event -> editInvite(invite));
+            edit.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            cell.add(edit);
+
             Button revoke = new Button("Revoke", event -> confirm(
                     "Revoke this link?",
                     "Anyone using it will lose access on their next request.",
@@ -117,12 +132,71 @@ public class SharePanel extends Div {
             revoke.setEnabled(invite.usable());
             revoke.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
                     ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
-            return revoke;
+            cell.add(revoke);
+            return cell;
         }).setHeader("").setAutoWidth(true);
         grid.setItems(invites);
         grid.setAllRowsVisible(true);
         grid.addClassName("editor-grid");
         invitesBody.add(grid);
+    }
+
+    private void editInvite(InviteView invite) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Edit invite link");
+        dialog.setWidth("min(520px, 94vw)");
+        dialog.add(new Paragraph("The link URL stays the same. Changing the role or "
+                + "visibility takes effect immediately."));
+
+        ComboBox<AccessRole> role = roleField(invite.role());
+        Checkbox publicLink = publicField(invite.publicAccess(), invite.role());
+        role.addValueChangeListener(event -> syncVisibility(role.getValue(), publicLink));
+
+        FormLayout form = new FormLayout(role, publicLink);
+        form.setColspan(publicLink, 2);
+        form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("420px", 2));
+
+        Button save = new Button("Save", event -> {
+            try {
+                inviteService.update(campaignId, currentUser.id(), invite.id(),
+                        role.getValue(), publicLink.getValue());
+                dialog.close();
+                refreshInvites();
+            } catch (RuntimeException exception) {
+                Ui.error(exception.getMessage());
+            }
+        });
+        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button cancel = new Button("Cancel", event -> dialog.close());
+
+        dialog.add(form);
+        dialog.getFooter().add(cancel, save);
+        dialog.open();
+    }
+
+    private static ComboBox<AccessRole> roleField(AccessRole value) {
+        ComboBox<AccessRole> role = new ComboBox<>("Role");
+        role.setItems(AccessRole.VIEWER, AccessRole.EDITOR);
+        role.setItemLabelGenerator(selected -> selected.name().toLowerCase());
+        role.setValue(value);
+        return role;
+    }
+
+    private static Checkbox publicField(boolean value, AccessRole role) {
+        Checkbox publicLink = new Checkbox("Public link");
+        publicLink.setHelperText(PUBLIC_HELPER);
+        publicLink.setValue(value);
+        syncVisibility(role, publicLink);
+        return publicLink;
+    }
+
+    static void syncVisibility(AccessRole role, Checkbox publicLink) {
+        boolean canBePublic = role != AccessRole.EDITOR;
+        publicLink.setEnabled(canBePublic);
+        if (!canBePublic) {
+            publicLink.setValue(false);
+        }
     }
 
     private void showInviteLink(String url) {

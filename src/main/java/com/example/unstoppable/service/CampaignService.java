@@ -160,7 +160,21 @@ public class CampaignService {
     @Transactional(readOnly = true)
     public CampaignSheet load(UUID campaignId, String subject) {
         CampaignAccess campaignAccess = access.requireReadable(campaignId, subject);
-        Campaign campaign = campaignAccess.campaign();
+        return buildSheet(campaignAccess.campaign(), campaignAccess.role());
+    }
+
+    /**
+     * Loads a sheet for an anonymous public link. Callers must validate the
+     * invite token as public before calling; this path performs no membership
+     * check and always reports the viewer role.
+     */
+    @Transactional(readOnly = true)
+    public CampaignSheet loadPublic(UUID campaignId) {
+        return buildSheet(requireCampaign(campaignId), AccessRole.VIEWER);
+    }
+
+    private CampaignSheet buildSheet(Campaign campaign, AccessRole role) {
+        UUID campaignId = campaign.getId();
 
         List<Participant> playerEntities =
                 participants.findByCampaignIdOrderBySeat(campaignId);
@@ -248,7 +262,7 @@ public class CampaignService {
                 campaign.getDifficulty());
 
         return new CampaignSheet(campaign.getId(), campaign.getPartyName(),
-                campaign.getDifficulty(), campaign.getStatus(), campaignAccess.role(),
+                campaign.getDifficulty(), campaign.getStatus(), role,
                 players, floors, purchaseViews, totals);
     }
 
