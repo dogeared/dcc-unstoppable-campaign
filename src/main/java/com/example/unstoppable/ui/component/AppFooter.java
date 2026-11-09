@@ -41,9 +41,10 @@ public class AppFooter extends Footer {
 
         Span disclaimers = new Span();
         disclaimers.addClassName("app-footer-disclaimers");
-        Span dinniman = new Span("An unofficial companion. "
+        Span dinniman = new Span("An unofficial companion.\n"
                 + "Dungeon Crawler Carl is © and ™ Matt Dinniman, LLC.");
         dinniman.addClassName("app-footer-disclaimer");
+        dinniman.addClassName("app-footer-disclaimer-matt");
         Span renegade = new Span("Dungeon Crawler Carl: Unstoppable is "
                 + "© 2026 Renegade Game Studios.");
         renegade.addClassName("app-footer-disclaimer");
