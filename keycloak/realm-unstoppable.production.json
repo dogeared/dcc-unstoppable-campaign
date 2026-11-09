@@ -28,14 +28,14 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "https://unstoppable.dogeared.dev/login/oauth2/code/keycloak"
+        "https://dcc-unstoppable.dogeared.dev/login/oauth2/code/keycloak"
       ],
       "webOrigins": [
-        "https://unstoppable.dogeared.dev"
+        "https://dcc-unstoppable.dogeared.dev"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "https://unstoppable.dogeared.dev/*"
+        "post.logout.redirect.uris": "https://dcc-unstoppable.dogeared.dev/*"
       }
     }
   ]

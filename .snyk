@@ -1,0 +1,15 @@
+# Snyk policy file.
+#
+# Ignore entries keep the high/critical gate meaningful: a finding is only
+# skipped here when there is no released fix to upgrade to. Remove the entry
+# as soon as an upstream release resolves the issue.
+version: v1.25.0
+ignore:
+  SNYK-JAVA-ORGGLASSFISHJAXB-20883142:
+    - '*':
+        reason: >-
+          No fixed release of org.glassfish.jaxb:jaxb-core has been published
+          yet (the fix is on master only). Re-evaluate when 4.0.10 or later is
+          released and drop this entry.
+        expires: 2027-02-01T00:00:00.000Z
+        created: 2026-11-08T00:00:00.000Z

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-08
+
+### Added
+
+- CI workflow that runs the tests with JaCoCo coverage, publishes tests,
+  coverage, and version badges to a `badges` branch, and tags each new `pom.xml`
+  version.
+- Snyk workflow (`snyk test` and `snyk code test`) on pushes to `main`, on pull
+  requests, and weekly; it fails on high or critical issues.
+- `pre-commit` hook that runs both Snyk scans and blocks commits on high or
+  critical issues.
+- Tests, coverage, and version badges in the README.
+
+### Changed
+
+- Production host is now `dcc-unstoppable.dogeared.dev` in the production
+  Keycloak realm, the production compose file, and the deployment docs.
+
+### Fixed
+
+- Critical `jackson-databind` deserialization issue (SNYK-JAVA-TOOLSJACKSONCORE-21761838)
+  by pinning Jackson to the patched 3.1.8 patch release.
+- Documented and time-boxed the `jaxb-core` XXE ignore in `.snyk`, since no
+  fixed release is published yet.
+
 ## [0.1.0] - 2026-11-08
 
 ### Added

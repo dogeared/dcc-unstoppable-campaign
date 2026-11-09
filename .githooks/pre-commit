@@ -1,0 +1,30 @@
+#!/bin/sh
+# Runs the Snyk dependency and code scans before every commit and blocks the
+# commit on high or critical issues. Enable once per clone with:
+#   git config core.hooksPath .githooks
+# Skip for a single commit with: git commit --no-verify
+
+# Keep in sync with SNYK_SEVERITY_THRESHOLD in .github/workflows/snyk.yml
+SEVERITY_THRESHOLD=high
+
+if ! command -v snyk >/dev/null 2>&1; then
+    echo "pre-commit: the snyk CLI is not installed." >&2
+    echo "pre-commit: install it with 'npm install --global snyk', then run 'snyk auth'." >&2
+    exit 1
+fi
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+status=0
+
+echo "pre-commit: snyk test (dependencies, threshold: $SEVERITY_THRESHOLD)"
+snyk test --file=pom.xml --severity-threshold="$SEVERITY_THRESHOLD" || status=1
+
+echo "pre-commit: snyk code test (static analysis, threshold: $SEVERITY_THRESHOLD)"
+snyk code test --severity-threshold="$SEVERITY_THRESHOLD" || status=1
+
+if [ "$status" -ne 0 ]; then
+    echo "pre-commit: Snyk found issues at or above '$SEVERITY_THRESHOLD'; commit blocked." >&2
+    echo "pre-commit: fix them, or bypass once with 'git commit --no-verify'." >&2
+fi
+exit "$status"

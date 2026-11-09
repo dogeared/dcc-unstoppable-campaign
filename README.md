@@ -1,5 +1,9 @@
 # Unstoppable campaign sheet
 
+[![Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/tests.json)](https://github.com/dogeared/dcc-unstoppable-campaign/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/coverage.json)](https://github.com/dogeared/dcc-unstoppable-campaign/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/version.json)](CHANGELOG.md)
+
 A web replacement for the paper campaign sheet in *Dungeon Crawler Carl:
 Unstoppable*. It keeps the paper layout for reading, adds a mobile-friendly
 tabbed editor, computes XP and final scores, and lets a whole party share one
@@ -149,7 +153,7 @@ mvn -Pproduction package
 ```
 
 The production profile builds the Vaadin frontend bundle. The resulting jar is
-`target/unstoppable-0.1.0.jar`.
+`target/unstoppable-0.1.1.jar`.
 
 The Docker image is a two-stage build (Maven build, then Temurin 21 JRE):
 
@@ -157,11 +161,36 @@ The Docker image is a two-stage build (Maven build, then Temurin 21 JRE):
 docker build -t unstoppable .
 ```
 
+## Continuous integration
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| [`CI`](.github/workflows/ci.yml) | pushes to `main`, pull requests | Runs the tests with coverage. On `main`, it publishes the badge data to the `badges` branch and creates a git tag for a new `pom.xml` version. |
+| [`Snyk`](.github/workflows/snyk.yml) | pushes to `main`, pull requests, weekly | Runs `snyk test` and `snyk code test`; fails on high or critical issues. Needs the `SNYK_TOKEN` repository secret. |
+
+### Snyk pre-commit hook
+
+The repository ships a `pre-commit` hook that runs `snyk test` (dependencies)
+and `snyk code test` (static analysis), and blocks the commit on any high or
+critical issue. Enable it once per clone:
+
+```bash
+npm install --global snyk   # if you don't have the CLI
+snyk auth
+git config core.hooksPath .githooks
+```
+
+Skip it for a single commit with `git commit --no-verify`.
+
+The one ignored finding in [`.snyk`](.snyk) is an `org.glassfish.jaxb:jaxb-core`
+XXE for which no fixed release has been published. The ignore expires on
+2027-02-01; remove it as soon as an upgrade is available.
+
 ## Production deployment (Synology + Cloudflare tunnel)
 
 Production uses:
 
-- `unstoppable.dogeared.dev` for the app
+- `dcc-unstoppable.dogeared.dev` for the app
 - `auth.dogeared.dev` for the central Keycloak
 - the shared Docker network `tnra-shared`
 - `compose.production.yaml`
@@ -194,7 +223,7 @@ The realm sets `frontendUrl` to `https://auth.dogeared.dev` and registers the
 redirect URI:
 
 ```
-https://unstoppable.dogeared.dev/login/oauth2/code/keycloak
+https://dcc-unstoppable.dogeared.dev/login/oauth2/code/keycloak
 ```
 
 Registration is enabled in the realm; the landing page's Register button sends
@@ -211,12 +240,12 @@ the realm's login theme to `unstoppable`.
 In the existing `cloudflared` configuration, add:
 
 ```yaml
-- hostname: unstoppable.dogeared.dev
+- hostname: dcc-unstoppable.dogeared.dev
   service: http://unstoppable-app:8080
 ```
 
 Restart `cloudflared`. The app is then available at
-<https://unstoppable.dogeared.dev>.
+<https://dcc-unstoppable.dogeared.dev>.
 
 `server.forward-headers-strategy: framework` is enabled, so the app honors
 `X-Forwarded-Proto` / `X-Forwarded-Host` when building invite links.
