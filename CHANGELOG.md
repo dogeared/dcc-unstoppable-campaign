@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-11-09
+
+### Fixed
+
+- Invite links now forward to the campaign sheet inside the same request after
+  sign-in. Previously the post-login join view triggered a second client-side
+  navigation and left the browser on a blank page until it was refreshed.
+- The Register button now opens Keycloak's registration endpoint directly.
+  The previous `prompt=create` parameter is ignored by older Keycloak releases,
+  which showed the sign-in form instead.
+
 ## [0.1.7] - 2026-11-09
 
 ### Changed

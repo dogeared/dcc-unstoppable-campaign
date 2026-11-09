@@ -3,7 +3,6 @@ package com.example.unstoppable.ui;
 import com.example.unstoppable.service.CurrentUser;
 import com.example.unstoppable.service.InviteService;
 import com.example.unstoppable.ui.component.AppFooter;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Paragraph;
@@ -36,7 +35,7 @@ public class JoinView extends VerticalLayout implements BeforeEnterObserver {
         String token = event.getRouteParameters().get("token").orElse("");
         try {
             var campaignId = inviteService.accept(token, currentUser.id());
-            UI.getCurrent().navigate("campaigns/" + campaignId);
+            event.forwardTo("campaigns/" + campaignId);
         } catch (RuntimeException exception) {
             Div card = new Div();
             card.addClassName("empty-card");

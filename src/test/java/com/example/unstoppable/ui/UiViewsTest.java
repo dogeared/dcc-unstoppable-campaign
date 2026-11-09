@@ -131,13 +131,16 @@ class UiViewsTest extends SpringBrowserlessTest {
     }
 
     @Test
-    void joinViewAcceptsTheInvite() {
+    void joinViewAcceptsTheInviteAndOpensTheSheet() {
         UUID campaignId = UUID.randomUUID();
         when(inviteService.accept("token-1", "owner")).thenReturn(campaignId);
+        when(campaignService.load(campaignId, "owner"))
+                .thenReturn(UiFixtures.richSheet(AccessRole.OWNER));
 
-        navigate(JoinView.class, Map.of("token", "token-1"));
+        navigate("join/token-1", CampaignSheetView.class);
 
         verify(inviteService).accept("token-1", "owner");
+        assertEquals("The Brave", find(H1.class).first().getText());
     }
 
     @Test
