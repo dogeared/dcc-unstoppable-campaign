@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-08
+
+### Added
+
+- MIT license file and a license section in the README.
+- Automatic deployment on `main`: CI publishes the container image to GHCR and
+  calls the signed deploy webhook. The deploy step is skipped when the webhook
+  secrets are not configured.
+
 ## [0.1.2] - 2026-11-08
 
 ### Added
