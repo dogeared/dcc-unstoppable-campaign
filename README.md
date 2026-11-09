@@ -228,8 +228,10 @@ https://dcc-unstoppable-campaign.dogeared.dev/login/oauth2/code/keycloak
 ```
 
 Registration is enabled in the realm; the landing page's Register button sends
-`prompt=create` (with `kc_action=register` for older releases) so new users land
-on the registration form instead of the sign-in form.
+the user to Keycloak's `/protocol/openid-connect/registrations` endpoint so new
+users land on the registration form instead of the sign-in form. That endpoint
+works across Keycloak versions, unlike `prompt=create`, which older releases
+ignore.
 
 The production realm does not set a `loginTheme`, so it uses the stock Keycloak
 page. To reuse the app's look on a Keycloak you control, copy

@@ -44,13 +44,18 @@ class RegisterAwareAuthorizationRequestResolverTest {
     }
 
     @Test
-    void registerModeAddsBothRegistrationParameters() {
+    void registerModeUsesTheRegistrationEndpoint() {
         OAuth2AuthorizationRequest resolved = resolver.resolve(request("register"));
 
         assertThat(resolved).isNotNull();
+        assertThat(resolved.getAuthorizationRequestUri())
+                .contains("/protocol/openid-connect/registrations?")
+                .contains("client_id=app")
+                .contains("redirect_uri=https://app.example.test/login/oauth2/code/keycloak")
+                .contains("code_challenge=")
+                .contains("code_challenge_method=S256");
         assertThat(resolved.getAdditionalParameters())
-                .containsEntry("prompt", "create")
-                .containsEntry("kc_action", "register");
+                .doesNotContainKeys("prompt", "kc_action");
     }
 
     @Test
@@ -58,9 +63,8 @@ class RegisterAwareAuthorizationRequestResolverTest {
         OAuth2AuthorizationRequest resolved = resolver.resolve(request("register"), "keycloak");
 
         assertThat(resolved).isNotNull();
-        assertThat(resolved.getAdditionalParameters())
-                .containsEntry("prompt", "create")
-                .containsEntry("kc_action", "register");
+        assertThat(resolved.getAuthorizationRequestUri())
+                .contains("/protocol/openid-connect/registrations?");
     }
 
     @Test
@@ -68,10 +72,12 @@ class RegisterAwareAuthorizationRequestResolverTest {
         OAuth2AuthorizationRequest resolved = resolver.resolve(request(null));
 
         assertThat(resolved).isNotNull();
-        assertThat(resolved.getAdditionalParameters()).doesNotContainKeys("prompt", "kc_action");
+        assertThat(resolved.getAuthorizationRequestUri())
+                .contains("/protocol/openid-connect/auth?");
 
         OAuth2AuthorizationRequest login = resolver.resolve(request("login"));
-        assertThat(login.getAdditionalParameters()).doesNotContainKeys("prompt", "kc_action");
+        assertThat(login.getAuthorizationRequestUri())
+                .contains("/protocol/openid-connect/auth?");
     }
 
     @Test
