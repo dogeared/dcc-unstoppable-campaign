@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-09
+
+### Fixed
+
+- Removing a shared campaign no longer throws
+  `Cannot read properties of undefined (reading 'overlay')` in the browser.
+  Production builds now load every route's web components at startup, so
+  directly opened routes have the dialog component registered before it is
+  used.
+
 ## [0.2.0] - 2026-11-09
 
 ### Added
