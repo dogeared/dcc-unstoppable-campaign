@@ -4,7 +4,7 @@ name: unstoppable
 #
 # Copy .env.production.example to .env (same folder as this file) and adjust.
 # The app joins the shared Docker network so the existing cloudflared tunnel
-# can route https://dcc-unstoppable.dogeared.dev to http://unstoppable-app:8080.
+# can route https://dcc-unstoppable-campaign.dogeared.dev to http://unstoppable-app:8080.
 services:
   db:
     image: postgres:17-alpine

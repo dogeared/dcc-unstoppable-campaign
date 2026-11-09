@@ -191,7 +191,7 @@ XXE for which no fixed release has been published. The ignore expires on
 
 Production uses:
 
-- `dcc-unstoppable.dogeared.dev` for the app
+- `dcc-unstoppable-campaign.dogeared.dev` for the app
 - `auth.dogeared.dev` for the central Keycloak
 - the shared Docker network `nas-shared`
 - `compose.production.yaml`
@@ -224,7 +224,7 @@ The realm sets `frontendUrl` to `https://auth.dogeared.dev` and registers the
 redirect URI:
 
 ```
-https://dcc-unstoppable.dogeared.dev/login/oauth2/code/keycloak
+https://dcc-unstoppable-campaign.dogeared.dev/login/oauth2/code/keycloak
 ```
 
 Registration is enabled in the realm; the landing page's Register button sends
@@ -241,12 +241,12 @@ the realm's login theme to `unstoppable`.
 In the existing `cloudflared` configuration, add:
 
 ```yaml
-- hostname: dcc-unstoppable.dogeared.dev
+- hostname: dcc-unstoppable-campaign.dogeared.dev
   service: http://unstoppable-app:8080
 ```
 
 Restart `cloudflared`. The app is then available at
-<https://dcc-unstoppable.dogeared.dev>.
+<https://dcc-unstoppable-campaign.dogeared.dev>.
 
 `server.forward-headers-strategy: framework` is enabled, so the app honors
 `X-Forwarded-Proto` / `X-Forwarded-Host` when building invite links.
