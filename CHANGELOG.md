@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-08
+
+### Added
+
+- Backend unit and browserless Vaadin view tests bringing line coverage to
+  more than 90%, with a JaCoCo `check` gate at 90%.
+- Vitest coverage for the frontend browser helpers, with a 90% coverage gate.
+- Separate backend and frontend coverage badges.
+
+### Changed
+
+- CI now runs the frontend tests and publishes both coverage badges.
+
+### Fixed
+
+- The version badge now reads the git tag directly instead of a JSON file on
+  the `badges` branch.
+
 ## [0.1.1] - 2026-11-08
 
 ### Added

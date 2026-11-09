@@ -1,8 +1,9 @@
 # Unstoppable campaign sheet
 
 [![Tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/tests.json)](https://github.com/dogeared/dcc-unstoppable-campaign/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/coverage.json)](https://github.com/dogeared/dcc-unstoppable-campaign/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/version.json)](CHANGELOG.md)
+[![Backend coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/backend-coverage.json)](https://github.com/dogeared/dcc-unstoppable-campaign/actions/workflows/ci.yml)
+[![Frontend coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dogeared/dcc-unstoppable-campaign/badges/frontend-coverage.json)](https://github.com/dogeared/dcc-unstoppable-campaign/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/v/tag/dogeared/dcc-unstoppable-campaign?label=version)](CHANGELOG.md)
 
 A web replacement for the paper campaign sheet in *Dungeon Crawler Carl:
 Unstoppable*. It keeps the paper layout for reading, adds a mobile-friendly
@@ -165,7 +166,7 @@ docker build -t unstoppable .
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| [`CI`](.github/workflows/ci.yml) | pushes to `main`, pull requests | Runs the tests with coverage. On `main`, it publishes the badge data to the `badges` branch and creates a git tag for a new `pom.xml` version. |
+| [`CI`](.github/workflows/ci.yml) | pushes to `main`, pull requests | Runs the backend (JUnit + JaCoCo) and frontend (Vitest) tests with coverage. On `main`, it publishes the badge data to the `badges` branch and creates a git tag for a new `pom.xml` version. |
 | [`Snyk`](.github/workflows/snyk.yml) | pushes to `main`, pull requests, weekly | Runs `snyk test` and `snyk code test`; fails on high or critical issues. Needs the `SNYK_TOKEN` repository secret. |
 
 ### Snyk pre-commit hook
