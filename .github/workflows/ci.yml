@@ -33,9 +33,11 @@ jobs:
           node-version: '24'
           cache: npm
 
-      # Frontend tests run first, before Vaadin's prepare-frontend rewrites package.json
+      # Frontend tests run first, before Vaadin's prepare-frontend rewrites package.json.
+      # `npm install` (not `npm ci`) keeps the lock file tolerant of platform-specific
+      # optional dependencies such as the rolldown native bindings.
       - name: Install frontend test dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
 
       - name: Run frontend tests with coverage
         id: frontend
