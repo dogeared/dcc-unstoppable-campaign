@@ -1,0 +1,305 @@
+/* Unstoppable login theme. Tokens mirror
+   src/main/resources/META-INF/resources/styles/unstoppable.css; keep them in sync.
+   The look follows the game assets: crimson banners, gold rules, parchment ink. */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@400;500;600;700&family=Spectral:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  --u-bg: #080b0e;
+  --u-bg-2: #10161c;
+  --u-surface: #141c23;
+  --u-surface-2: #1b252d;
+  --u-ink: #f2e9d6;
+  --u-muted: #bdb096;
+  --u-faint: #8d816c;
+  --u-line: rgba(242, 233, 214, 0.12);
+  --u-line-strong: rgba(242, 233, 214, 0.26);
+  --u-accent: #b01e24;
+  --u-accent-deep: #7d1216;
+  --u-accent-soft: rgba(176, 30, 36, 0.18);
+  --u-gold: #f0c033;
+  --u-gold-soft: rgba(240, 192, 51, 0.14);
+  --u-gold-line: rgba(240, 192, 51, 0.34);
+  --u-danger: #e5484d;
+  --u-danger-soft: rgba(229, 72, 77, 0.16);
+
+  --u-display: "Anton", "Oswald", "Arial Narrow", Impact, sans-serif;
+  --u-condensed: "Oswald", "Arial Narrow", sans-serif;
+  --u-serif: "Spectral", ui-serif, Georgia, serif;
+  --u-sans: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Re-point the PatternFly tokens the parent theme reads. */
+  --pf-v5-global--FontFamily--text: var(--u-sans);
+  --pf-v5-global--FontFamily--heading: var(--u-condensed);
+  --pf-v5-global--primary-color--100: var(--u-accent);
+  --pf-v5-global--primary-color--200: #c22a30;
+  --pf-v5-global--link--Color: var(--u-gold);
+  --pf-v5-global--link--Color--hover: var(--u-ink);
+  --pf-v5-global--active-color--100: var(--u-gold);
+  --keycloak-card-top-color: var(--u-accent);
+}
+
+html.login-pf,
+.login-pf body {
+  background:
+    radial-gradient(900px 520px at 50% -10%, rgba(176, 30, 36, 0.34), transparent 64%),
+    radial-gradient(700px 420px at 12% 105%, rgba(240, 192, 51, 0.08), transparent 62%),
+    repeating-linear-gradient(135deg,
+      rgba(255, 255, 255, 0.015) 0 2px,
+      transparent 2px 7px),
+    var(--u-bg);
+  background-attachment: fixed;
+  color: var(--u-ink);
+  font-family: var(--u-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--u-accent);
+  color: var(--u-ink);
+}
+
+/* ------------------------------------------------------------ wordmark */
+
+#kc-header-wrapper {
+  /* Parent renders the realm name in uppercase white; hide that text and draw
+     the app's two-tone wordmark instead: "un" in gold, "stoppable" in ink. */
+  font-size: 0;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: center;
+  line-height: 0.9;
+  padding: 0 0 10px;
+}
+
+#kc-header-wrapper::before,
+#kc-header-wrapper::after {
+  font-family: var(--u-display);
+  font-weight: 400;
+  font-size: 46px;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.5));
+}
+
+#kc-header-wrapper::before {
+  content: "un";
+  color: var(--u-gold);
+}
+
+#kc-header-wrapper::after {
+  content: "stoppable";
+  color: var(--u-ink);
+}
+
+/* ---------------------------------------------------------------- card */
+
+.pf-v5-c-login__main {
+  background: linear-gradient(180deg, rgba(22, 30, 38, 0.98), rgba(8, 11, 14, 0.98));
+  border: 1px solid var(--u-gold-line);
+  border-top: 4px solid var(--u-accent);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 44px 90px -42px #000,
+    inset 0 0 0 1px rgba(240, 192, 51, 0.07);
+  overflow: hidden;
+}
+
+.pf-v5-c-login__main-header {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.pf-v5-c-login__main-header .pf-v5-c-title,
+#kc-page-title {
+  font-family: var(--u-condensed);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--u-ink);
+}
+
+/* ---------------------------------------------------------------- form */
+
+.pf-v5-c-form__label-text,
+.pf-v5-c-form__label {
+  font-family: var(--u-condensed);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--u-muted);
+}
+
+/* PatternFly draws input borders with ::before/::after; replace them with a
+   plain border so radius and focus colour are ours. */
+.pf-v5-c-form-control {
+  background: var(--u-bg-2);
+  border: 1px solid var(--u-line-strong);
+  border-radius: 2px;
+  font-family: var(--u-sans);
+  color: var(--u-ink);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.pf-v5-c-form-control::before,
+.pf-v5-c-form-control::after {
+  display: none;
+}
+
+.pf-v5-c-form-control:focus-within {
+  background: var(--u-surface-2);
+  border-color: var(--u-gold);
+  box-shadow: 0 0 0 3px var(--u-gold-soft);
+}
+
+.pf-v5-c-form-control input {
+  background: transparent;
+  color: var(--u-ink);
+  outline: none;
+}
+
+.pf-v5-c-form-control input::placeholder {
+  color: var(--u-faint);
+}
+
+/* Banners, same recipe as .btn-primary in the app. */
+.pf-v5-c-button.pf-m-primary,
+.pf-v5-c-button.pf-m-secondary {
+  --pf-v5-c-button--BorderRadius: 3px;
+  border-radius: 3px;
+  padding: 12px 20px;
+  font-family: var(--u-condensed);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  line-height: 1;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background: linear-gradient(180deg, #c22a30, #96171d);
+  border: 1px solid var(--u-gold-line);
+  color: var(--u-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background: linear-gradient(180deg, #d3353b, #a81b22);
+  border-color: var(--u-gold);
+  color: var(--u-ink);
+}
+
+.pf-v5-c-button.pf-m-secondary {
+  background: rgba(240, 192, 51, 0.04);
+  color: var(--u-gold);
+  box-shadow: none;
+  border: 1px solid var(--u-gold-line);
+}
+
+.pf-v5-c-button.pf-m-secondary:hover {
+  background: var(--u-gold-soft);
+  border-color: var(--u-gold);
+  color: var(--u-ink);
+}
+
+.pf-v5-c-button.pf-m-primary:active {
+  transform: translateY(1px);
+}
+
+.pf-v5-c-button::after,
+.pf-v5-c-button.pf-m-primary::after,
+.pf-v5-c-button.pf-m-secondary::after {
+  border: 0;
+}
+
+.pf-v5-c-button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--u-gold);
+  outline-offset: 2px;
+}
+
+.pf-v5-c-button.pf-m-control {
+  background: transparent;
+  color: var(--u-muted);
+}
+
+a {
+  color: var(--u-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--u-ink);
+}
+
+a.pf-v5-c-button {
+  text-decoration: none;
+}
+
+/* -------------------------------------------------------------- alerts */
+
+.pf-v5-c-alert {
+  border-radius: 3px;
+  border: 1px solid var(--u-gold-line);
+  background: var(--u-gold-soft);
+  color: var(--u-ink);
+}
+
+.pf-v5-c-alert.pf-m-danger,
+.pf-v5-c-alert.pf-m-warning {
+  background: var(--u-danger-soft);
+  border-color: rgba(229, 72, 77, 0.4);
+}
+
+.pf-v5-c-alert.pf-m-success,
+.pf-v5-c-alert.pf-m-info {
+  background: var(--u-bg-2);
+}
+
+.pf-v5-c-alert__title,
+.pf-v5-c-alert__icon {
+  color: var(--u-ink);
+}
+
+.pf-v5-c-alert.pf-m-danger .pf-v5-c-alert__icon {
+  color: var(--u-danger);
+}
+
+.pf-v5-c-helper-text__item.pf-m-error .pf-v5-c-helper-text__item-text,
+.pf-v5-c-helper-text__item-text.pf-m-error {
+  color: #ff6b6e;
+}
+
+/* -------------------------------------------------------------- footer */
+
+.pf-v5-c-login__main-footer-band {
+  background: var(--u-bg-2);
+  border-top: 1px solid var(--u-line);
+  color: var(--u-muted);
+}
+
+hr {
+  border-color: var(--u-line);
+}
+
+.pf-v5-c-check__input {
+  accent-color: var(--u-accent);
+}
+
+/* -------------------------------------------------------------- mobile */
+
+@media (max-width: 575px) {
+  #kc-header-wrapper::before,
+  #kc-header-wrapper::after {
+    font-size: 36px;
+  }
+
+  .pf-v5-c-login__main {
+    border-radius: 2px;
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "realm": "unstoppable",
+  "enabled": true,
+  "displayName": "Unstoppable Campaign Sheet",
+  "loginTheme": "unstoppable",
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 2592000,
+  "ssoSessionMaxLifespan": 2592000,
+  "attributes": {
+    "frontendUrl": "https://auth.dev.dogeared.dev"
+  },
+  "clients": [
+    {
+      "clientId": "unstoppable-app",
+      "name": "Unstoppable Campaign Sheet",
+      "description": "Vaadin web application",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:8084/*",
+        "http://127.0.0.1:8080/*",
+        "http://127.0.0.1:8084/*",
+        "http://localhost:8181/*",
+        "https://unstoppable.dev.dogeared.dev/*",
+        "https://dcc-unstoppable.dev.dogeared.dev/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:8084",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:8084",
+        "http://localhost:8181",
+        "https://unstoppable.dev.dogeared.dev",
+        "https://dcc-unstoppable.dev.dogeared.dev"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Crawler",
+      "email": "demo@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

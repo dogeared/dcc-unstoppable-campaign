@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: unstoppable
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5435/unstoppable}
+    username: ${DB_USER:unstoppable}
+    password: ${DB_PASSWORD:unstoppable}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  keycloak:
+    # Browser-facing Keycloak URL (authorization endpoint + token issuer).
+    # Local development uses the shared Keycloak through the mkcert reverse
+    # proxy in ~/Projects/local-keycloak. Override with KEYCLOAK_PUBLIC_URL.
+    public-url: ${KEYCLOAK_PUBLIC_URL:https://auth.dev.dogeared.dev}
+    # Back-channel URL used for token exchange and JWKS. Can differ in Docker.
+    internal-url: ${KEYCLOAK_INTERNAL_URL:https://auth.dev.dogeared.dev}
+    realm: ${KEYCLOAK_REALM:unstoppable}
+    client-id: ${KEYCLOAK_CLIENT_ID:unstoppable-app}
+
+server:
+  port: ${SERVER_PORT:8084}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 30d
+      cookie:
+        max-age: 30d
+
+vaadin:
+  launch-browser: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    com.example.unstoppable: INFO

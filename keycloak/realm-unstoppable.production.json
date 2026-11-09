@@ -1,0 +1,42 @@
+{
+  "realm": "unstoppable",
+  "enabled": true,
+  "displayName": "Unstoppable Campaign Sheet",
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 2592000,
+  "ssoSessionMaxLifespan": 2592000,
+  "attributes": {
+    "frontendUrl": "https://auth.dogeared.dev"
+  },
+  "clients": [
+    {
+      "clientId": "unstoppable-app",
+      "name": "Unstoppable Campaign Sheet",
+      "description": "Vaadin web application",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://unstoppable.dogeared.dev/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "https://unstoppable.dogeared.dev"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://unstoppable.dogeared.dev/*"
+      }
+    }
+  ]
+}

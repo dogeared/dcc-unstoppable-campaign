@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+*.iml
+DCCUnstoppableCampaignSheet.pdf
+docs/
+.scratch/
+.env
