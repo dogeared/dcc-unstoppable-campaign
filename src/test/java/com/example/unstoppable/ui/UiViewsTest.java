@@ -6,6 +6,7 @@ import com.example.unstoppable.service.CampaignNotFoundException;
 import com.example.unstoppable.service.CampaignService;
 import com.example.unstoppable.service.CurrentUser;
 import com.example.unstoppable.service.InviteService;
+import com.example.unstoppable.ui.component.AppFooter;
 import com.vaadin.browserless.SpringBrowserlessTest;
 import com.vaadin.browserless.ViewPackages;
 import com.vaadin.flow.component.button.Button;
@@ -244,8 +245,18 @@ class UiViewsTest extends SpringBrowserlessTest {
     }
 
     @Test
-    void mainLayoutTogglesDrawerAndSignsOut() {
-        MainLayout layout = new MainLayout(currentUser, authenticationContext);
+    void mainLayoutShowsFooterWithVersion() {
+        when(campaignService.listFor("owner")).thenReturn(List.of());
+
+        navigate(CampaignListView.class);
+
+        AppFooter footer = find(AppFooter.class).first();
+        assertTrue(footer.getElement().getTextRecursively().contains("dogeared"));
+        assertTrue(footer.getElement().getTextRecursively().contains("v"));
+    }
+
+    @Test
+    void mainLayoutTogglesDrawerAndSignsOut() {        MainLayout layout = new MainLayout(currentUser, authenticationContext);
         com.vaadin.flow.component.UI.getCurrent().add(layout);
 
         NativeButton toggle = find(NativeButton.class, layout).all().stream()

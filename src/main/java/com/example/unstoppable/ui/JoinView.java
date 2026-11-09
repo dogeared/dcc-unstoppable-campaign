@@ -2,6 +2,7 @@ package com.example.unstoppable.ui;
 
 import com.example.unstoppable.service.CurrentUser;
 import com.example.unstoppable.service.InviteService;
+import com.example.unstoppable.ui.component.AppFooter;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -42,7 +43,7 @@ public class JoinView extends VerticalLayout implements BeforeEnterObserver {
             card.add(new H1("That link did not work."));
             card.add(new Paragraph(exception.getMessage()));
             card.add(new Paragraph("Ask the campaign owner for a fresh invite link."));
-            add(card);
+            add(card, new AppFooter());
         }
     }
 }
