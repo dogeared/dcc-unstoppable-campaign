@@ -11,6 +11,7 @@ import com.example.unstoppable.ui.component.AppFooter;
 import com.vaadin.browserless.SpringBrowserlessTest;
 import com.vaadin.browserless.ViewPackages;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
@@ -66,6 +67,15 @@ class UiViewsTest extends SpringBrowserlessTest {
         navigate(LoginView.class);
 
         assertTrue(getCurrentView() instanceof LoginView);
+    }
+
+    @Test
+    void landingViewCreditsRenegadeGameStudios() {
+        navigate(LandingView.class);
+
+        assertTrue(find(com.vaadin.flow.component.html.Span.class).all().stream()
+                .anyMatch(span -> "Dungeon Crawler Carl: Unstoppable is "
+                        .concat("© 2026 Renegade Game Studios.").equals(span.getText())));
     }
 
     @Test
@@ -219,6 +229,39 @@ class UiViewsTest extends SpringBrowserlessTest {
                 .anyMatch(span -> "+ starting hand".equals(span.getText())));
         assertTrue(find(com.vaadin.flow.component.html.H3.class).all().stream()
                 .anyMatch(heading -> "Floor 1".equals(heading.getText())));
+    }
+
+    @Test
+    void sheetViewSharesWithViewerAsTheDefaultRole() {
+        when(campaignService.load(any(), any()))
+                .thenReturn(UiFixtures.richSheet(AccessRole.OWNER));
+        when(inviteService.list(any(), any())).thenReturn(List.of());
+
+        navigate(CampaignSheetView.class,
+                Map.of("campaignId", UiFixtures.CAMPAIGN_ID.toString()));
+
+        Button share = find(Button.class).all().stream()
+                .filter(button -> "Share".equals(button.getText()))
+                .findFirst().orElseThrow();
+        test(share).click();
+
+        Dialog dialog = find(Dialog.class).all().stream()
+                .filter(open -> "Share this campaign".equals(open.getHeaderTitle()))
+                .findFirst().orElseThrow();
+        ComboBox<?> role = find(ComboBox.class, dialog).first();
+        assertEquals(AccessRole.VIEWER, role.getValue());
+    }
+
+    @Test
+    void sheetViewHidesShareFromNonOwners() {
+        when(campaignService.load(any(), any()))
+                .thenReturn(UiFixtures.richSheet(AccessRole.EDITOR));
+
+        navigate(CampaignSheetView.class,
+                Map.of("campaignId", UiFixtures.CAMPAIGN_ID.toString()));
+
+        assertTrue(find(Button.class).all().stream()
+                .noneMatch(button -> "Share".equals(button.getText())));
     }
 
     @Test

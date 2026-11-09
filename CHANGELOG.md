@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
+### Added
+
+- The home page now credits Renegade Game Studios alongside the existing
+  Matt Dinniman notice.
+- Campaign owners can share directly from the campaign sheet with a Share
+  action, without opening the editor first.
+
+### Changed
+
+- New invite links default to the Viewer role. Owners can still choose Editor
+  when they want the invitee to make changes.
+
 ## [0.2.1] - 2026-11-09
 
 ### Fixed

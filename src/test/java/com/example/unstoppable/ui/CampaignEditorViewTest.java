@@ -9,6 +9,7 @@ import com.vaadin.browserless.SpringBrowserlessTest;
 import com.vaadin.browserless.ViewPackages;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
@@ -217,6 +218,18 @@ class CampaignEditorViewTest extends SpringBrowserlessTest {
                 .findFirst().orElseThrow();
         test(close).click();
         assertFalse(test(link).isOpen());
+    }
+
+    @Test
+    void shareTabDefaultsToViewerRole() {
+        openEditor(new CampaignSheetFixture(UiFixtures.richSheet(AccessRole.OWNER)));
+
+        test(find(TabSheet.class).first()).select("Share");
+        ComboBox<?> role = find(ComboBox.class).all().stream()
+                .filter(combo -> "Role".equals(combo.getLabel()))
+                .findFirst().orElseThrow();
+
+        assertEquals(AccessRole.VIEWER, role.getValue());
     }
 
     @Test
