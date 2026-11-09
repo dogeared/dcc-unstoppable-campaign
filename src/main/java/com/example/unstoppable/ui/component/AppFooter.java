@@ -49,7 +49,7 @@ public class AppFooter extends Footer {
         renegade.addClassName("app-footer-disclaimer");
         disclaimers.add(dinniman, renegade);
 
-        add(made, version, disclaimers);
+        add(made, disclaimers, version);
     }
 
     /**

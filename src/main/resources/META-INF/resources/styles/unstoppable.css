@@ -146,10 +146,9 @@ p {
 }
 
 .app-footer {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 0.4rem 1rem;
   width: 100%;
   padding: 0.85rem 1.25rem;
@@ -193,21 +192,22 @@ p {
 }
 
 .app-footer-disclaimers {
-  flex-basis: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 1rem;
+  text-align: center;
 }
 
 .app-footer-disclaimer {
-  display: block;
+  display: inline;
 }
 
 .landing-view .app-footer,
 .join-view .app-footer {
-  max-width: 760px;
+  max-width: min(1100px, 100%);
   margin-inline: auto;
-  padding-inline: 0;
   border-top: 0;
 }
 
@@ -1396,6 +1396,27 @@ vaadin-integer-field {
 }
 
 @media (max-width: 620px) {
+  .app-footer {
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+  }
+
+  .app-footer-made {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .app-footer-version {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .app-footer-disclaimers {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
