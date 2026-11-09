@@ -191,6 +191,55 @@ class CampaignServiceTest {
         assertEquals(0, summaries.getFirst().floorsCompleted());
     }
 
+    // ---- removing shared campaigns -----------------------------------------
+
+    @Test
+    void removeSharedCampaignDeletesViewerMembership() {
+        CampaignMembership membership =
+                new CampaignMembership(campaign, "viewer", AccessRole.VIEWER);
+        when(access.requireReadable(campaign.getId(), "viewer"))
+                .thenReturn(new CampaignAccess(campaign, AccessRole.VIEWER));
+        when(memberships.findByCampaignIdAndSubject(campaign.getId(), "viewer"))
+                .thenReturn(Optional.of(membership));
+
+        service.removeSharedCampaign(campaign.getId(), "viewer");
+
+        verify(memberships).delete(membership);
+    }
+
+    @Test
+    void removeSharedCampaignDeletesEditorMembership() {
+        CampaignMembership membership =
+                new CampaignMembership(campaign, "editor", AccessRole.EDITOR);
+        when(access.requireReadable(campaign.getId(), "editor"))
+                .thenReturn(new CampaignAccess(campaign, AccessRole.EDITOR));
+        when(memberships.findByCampaignIdAndSubject(campaign.getId(), "editor"))
+                .thenReturn(Optional.of(membership));
+
+        service.removeSharedCampaign(campaign.getId(), "editor");
+
+        verify(memberships).delete(membership);
+    }
+
+    @Test
+    void removeSharedCampaignRejectsOwners() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.removeSharedCampaign(campaign.getId(), "owner"));
+
+        verify(memberships, never()).delete(any());
+    }
+
+    @Test
+    void removeSharedCampaignRequiresReadableAccess() {
+        when(access.requireReadable(campaign.getId(), "stranger"))
+                .thenThrow(new AccessDeniedException("nope"));
+
+        assertThrows(AccessDeniedException.class,
+                () -> service.removeSharedCampaign(campaign.getId(), "stranger"));
+
+        verify(memberships, never()).delete(any());
+    }
+
     // ---- loading ------------------------------------------------------------
 
     @Test

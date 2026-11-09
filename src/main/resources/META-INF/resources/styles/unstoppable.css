@@ -709,6 +709,19 @@ vaadin-integer-field {
   gap: 0.4rem;
 }
 
+.campaign-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.campaign-actions .btn-ghost {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
 .empty-card,
 .form-card {
   display: flex;

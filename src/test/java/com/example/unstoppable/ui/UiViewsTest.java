@@ -4,12 +4,14 @@ import com.example.unstoppable.domain.AccessRole;
 import com.example.unstoppable.domain.CampaignStatus;
 import com.example.unstoppable.service.CampaignNotFoundException;
 import com.example.unstoppable.service.CampaignService;
+import com.example.unstoppable.service.CampaignSummary;
 import com.example.unstoppable.service.CurrentUser;
 import com.example.unstoppable.service.InviteService;
 import com.example.unstoppable.ui.component.AppFooter;
 import com.vaadin.browserless.SpringBrowserlessTest;
 import com.vaadin.browserless.ViewPackages;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
@@ -96,6 +98,49 @@ class UiViewsTest extends SpringBrowserlessTest {
         navigate(CampaignListView.class);
 
         assertEquals("No campaigns yet.", find(H2.class).first().getText());
+    }
+
+    @Test
+    void campaignListShowsRemoveOnlyForSharedCampaigns() {
+        List<CampaignSummary> campaigns = List.of(
+                UiFixtures.summary(AccessRole.OWNER, CampaignStatus.ACTIVE),
+                UiFixtures.summary(AccessRole.EDITOR, CampaignStatus.ACTIVE),
+                UiFixtures.summary(AccessRole.VIEWER, CampaignStatus.ACTIVE));
+        when(campaignService.listFor("owner")).thenReturn(campaigns);
+
+        navigate(CampaignListView.class);
+
+        List<Button> removeButtons = find(Button.class).all().stream()
+                .filter(button -> "Remove from list".equals(button.getText()))
+                .toList();
+        assertEquals(2, removeButtons.size());
+    }
+
+    @Test
+    void campaignListRemovesSharedCampaignAfterConfirmation() {
+        CampaignSummary shared = UiFixtures.summary(AccessRole.VIEWER, CampaignStatus.ACTIVE);
+        when(campaignService.listFor("owner")).thenReturn(List.of(shared));
+
+        navigate(CampaignListView.class);
+
+        Button remove = find(Button.class).all().stream()
+                .filter(button -> "Remove from list".equals(button.getText()))
+                .findFirst().orElseThrow();
+        test(remove).click();
+
+        Dialog dialog = find(Dialog.class).all().stream()
+                .filter(d -> "Remove from list?".equals(d.getHeaderTitle()))
+                .findFirst().orElseThrow();
+        assertTrue(dialog.getElement().getTextRecursively().contains(shared.partyName()));
+
+        Button confirm = find(Button.class, dialog).all().stream()
+                .filter(button -> "Remove".equals(button.getText()))
+                .findFirst().orElseThrow();
+        test(confirm).click();
+
+        verify(campaignService).removeSharedCampaign(shared.id(), "owner");
+        assertTrue(find(com.vaadin.flow.component.notification.Notification.class)
+                .all().stream().anyMatch(notification -> true));
     }
 
     @Test

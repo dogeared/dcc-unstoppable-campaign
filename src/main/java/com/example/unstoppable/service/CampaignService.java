@@ -116,6 +116,21 @@ public class CampaignService {
         access.requireOwner(campaignId, subject).campaign().reopen();
     }
 
+    /**
+     * Removes a campaign shared with the user from their list. Only viewer and
+     * editor memberships can be removed; owners keep their own campaigns.
+     */
+    @Transactional
+    public void removeSharedCampaign(UUID campaignId, String subject) {
+        CampaignAccess campaignAccess = access.requireReadable(campaignId, subject);
+        if (campaignAccess.role() == AccessRole.OWNER) {
+            throw new IllegalArgumentException(
+                    "Owners cannot remove their own campaign from the list");
+        }
+        memberships.findByCampaignIdAndSubject(campaignId, subject)
+                .ifPresent(memberships::delete);
+    }
+
     @Transactional(readOnly = true)
     public List<CampaignSummary> listFor(String subject) {
         Map<UUID, AccessRole> roles = new LinkedHashMap<>();

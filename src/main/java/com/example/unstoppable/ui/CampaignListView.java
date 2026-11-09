@@ -5,6 +5,9 @@ import com.example.unstoppable.domain.CampaignStatus;
 import com.example.unstoppable.service.CampaignService;
 import com.example.unstoppable.service.CampaignSummary;
 import com.example.unstoppable.service.CurrentUser;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -103,8 +106,41 @@ public class CampaignListView extends VerticalLayout {
         Anchor open = new Anchor("campaigns/" + campaign.id(), "Open sheet");
         open.addClassName("btn-ghost");
 
-        card.add(top, stats, open);
+        Div actions = new Div();
+        actions.addClassName("campaign-actions");
+        actions.add(open);
+        if (campaign.role() != AccessRole.OWNER) {
+            Button remove = new Button("Remove from list",
+                    event -> confirmRemove(campaign));
+            Css.add(remove, "btn", "btn-ghost");
+            actions.add(remove);
+        }
+
+        card.add(top, stats, actions);
         return card;
+    }
+
+    private void confirmRemove(CampaignSummary campaign) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Remove from list?");
+        dialog.add(new Paragraph("Remove \"" + campaign.partyName()
+                + "\" from your list? You can rejoin later with a new invite link."));
+
+        Button cancel = new Button("Cancel", event -> dialog.close());
+        Button remove = new Button("Remove", event -> {
+            try {
+                campaignService.removeSharedCampaign(campaign.id(), currentUser.id());
+                dialog.close();
+                Ui.success("Campaign removed from your list");
+                removeAll();
+                render();
+            } catch (RuntimeException exception) {
+                Ui.error(exception.getMessage());
+            }
+        });
+        remove.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_PRIMARY);
+        dialog.getFooter().add(cancel, remove);
+        dialog.open();
     }
 
     private static Div stat(String label, String value) {

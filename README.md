@@ -58,59 +58,55 @@ docker compose up -d db
 This starts `unstoppable-db` on `localhost:5435` with database, user, and
 password all set to `unstoppable`. Flyway creates the schema on first boot.
 
-### 2. Start the shared local Keycloak
+### 2. Configure an OpenID Connect provider
 
-Local auth runs through the shared Keycloak stack in
-`~/Projects/local-keycloak`, exposed by its mkcert reverse proxy at
-<https://auth.dev.dogeared.dev>:
+Sign-in uses the OIDC authorization-code flow with PKCE, so any
+spec-compliant provider works. The author uses
+[Keycloak](https://www.keycloak.org/). Point the app at your provider with
+these environment variables:
 
-```bash
-cd ~/Projects/local-keycloak
-docker compose up -d
+| Variable | Meaning |
+| --- | --- |
+| `KEYCLOAK_PUBLIC_URL` | Browser-facing issuer URL |
+| `KEYCLOAK_INTERNAL_URL` | Back-channel token/JWKS URL (may equal the public URL) |
+| `KEYCLOAK_REALM` | Realm name |
+| `KEYCLOAK_CLIENT_ID` | OIDC client id |
+
+The client must be public, allow the authorization-code flow with PKCE, and
+register the redirect URI:
+
+```
+http://localhost:8084/login/oauth2/code/keycloak
 ```
 
-That compose file mounts this repository's local Keycloak config:
+Enable user registration on the provider if you want the landing page's
+Register button to open a sign-up form.
 
-- realm import: `keycloak/realm-unstoppable.json`
-- login theme: `keycloak/themes/unstoppable`
-
-The realm creates the `unstoppable-app` public client and the `demo` /
-`demo` user on first import. `--import-realm` only creates realms that do not
-exist yet, so after editing the realm file apply the changes to the running
-instance (or delete the realm and restart Keycloak):
-
-```bash
-docker exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
-  --server http://localhost:8080 --realm master --user admin --password admin
-docker exec keycloak /opt/keycloak/bin/kcadm.sh update realms/unstoppable \
-  -s loginTheme=unstoppable \
-  -s attributes.frontendUrl=https://auth.dev.dogeared.dev
-```
-
-Theme files are mounted read-only and picked up without a restart because the
-shared stack disables the theme caches.
+The repository includes a starting realm import and login theme under
+`keycloak/`. To use them with Keycloak, import
+`keycloak/realm-unstoppable.json` into your instance and copy
+`keycloak/themes/unstoppable` into the instance's `themes` directory. Adjust
+the realm's redirect URIs, web origins, and frontend URL for your own host.
+`--import-realm` only creates realms that do not exist yet, so apply later
+realm edits to the running instance or delete and re-import it.
 
 ### 3. Run the app
 
 ```bash
+export KEYCLOAK_PUBLIC_URL=https://auth.example.test
+export KEYCLOAK_INTERNAL_URL=https://auth.example.test
+export KEYCLOAK_REALM=unstoppable
+export KEYCLOAK_CLIENT_ID=unstoppable-app
 mvn spring-boot:run
 ```
 
 Open <http://localhost:8084>. The landing page has Log in and Register buttons;
 after sign-in you land on `/campaigns`. Register opens the identity provider's
-registration form directly. No environment overrides are needed: the defaults
-already point at `https://auth.dev.dogeared.dev`.
+registration form directly.
 
-To test from another device on the LAN, the shared proxy serves the app at
-<https://dcc-unstoppable.dev.dogeared.dev> (`nginx/sites/dcc-unstoppable-dev.conf`
-in `~/Projects/local-keycloak` forwards to `host.docker.internal:8084`). Point
-the other device's `/etc/hosts` at this machine's LAN IP; the mkcert certificate
-already covers `*.dev.dogeared.dev`. The realm's redirect URIs allow that host.
-
-> Vaadin's dev-tools connection only trusts loopback, so when the app is opened
-> through the proxy the dev-tools panel logs "Dev tools functionality denied for
-> this host". Application pages, login, and `@Push` work normally; use
-> `http://localhost:8084` when you need the dev-tools panel or live reload.
+> Vaadin's dev-tools connection only trusts loopback, so the dev-tools panel and
+> live reload work on `http://localhost:8084`. Application pages, login, and
+> `@Push` work normally through any proxy or alternate hostname.
 
 Environment overrides:
 
@@ -120,13 +116,13 @@ Environment overrides:
 | `DB_URL` | `jdbc:postgresql://localhost:5435/unstoppable` | JDBC URL |
 | `DB_USER` | `unstoppable` | Database user |
 | `DB_PASSWORD` | `unstoppable` | Database password |
-| `KEYCLOAK_PUBLIC_URL` | `https://auth.dev.dogeared.dev` | Browser-facing issuer URL |
-| `KEYCLOAK_INTERNAL_URL` | `https://auth.dev.dogeared.dev` | Back-channel token/JWKS URL |
-| `KEYCLOAK_REALM` | `unstoppable` | Realm name |
-| `KEYCLOAK_CLIENT_ID` | `unstoppable-app` | OIDC client id |
+| `KEYCLOAK_PUBLIC_URL` | — | Browser-facing issuer URL |
+| `KEYCLOAK_INTERNAL_URL` | — | Back-channel token/JWKS URL |
+| `KEYCLOAK_REALM` | — | Realm name |
+| `KEYCLOAK_CLIENT_ID` | — | OIDC client id |
 
-The mkcert development CA is installed in this machine's Java trust store, so
-the app trusts the proxy certificate during local testing.
+If your provider uses a private or self-signed certificate, add its CA to the
+Java trust store used to run the app.
 
 ### Run the whole dev stack in Docker
 
@@ -134,17 +130,19 @@ the app trusts the proxy certificate during local testing.
 docker compose up --build
 ```
 
-`compose.yaml` joins the external `local-infra` network so the app can reach the
-shared Keycloak by service name. Create it once if it does not exist:
+`compose.yaml` joins an external Docker network named `local-infra` so the app
+can reach an OIDC provider started by another Compose project. Create it once if
+it does not exist:
 
 ```bash
 docker network create local-infra
 ```
 
-Inside Docker, the app uses `KEYCLOAK_INTERNAL_URL=http://keycloak:8080` for
-back-channel calls while the browser still uses
-`https://auth.dev.dogeared.dev`. The realm's `frontendUrl` pins the issuer to the
-public host, so both paths agree.
+Inside Docker, set `KEYCLOAK_INTERNAL_URL` to a URL the app container can reach
+(and `KEYCLOAK_PUBLIC_URL` to the browser-facing URL). If your provider is not
+on `local-infra`, point the URL at whatever network the container can reach and
+adjust the Compose file accordingly. The realm's `frontendUrl` should pin the
+issuer to the public host so the browser and back-channel views agree.
 
 ## Test and build
 
@@ -154,7 +152,7 @@ mvn -Pproduction package
 ```
 
 The production profile builds the Vaadin frontend bundle. The resulting jar is
-`target/unstoppable-0.1.1.jar`.
+`target/unstoppable-0.2.0.jar`.
 
 The Docker image is a two-stage build (Maven build, then Temurin 21 JRE):
 
@@ -288,8 +286,7 @@ src/main/java/com/example/unstoppable/
 src/main/resources/
   db/migration/V1__initial_schema.sql
   META-INF/resources/styles/unstoppable.css
-keycloak/       local realm + login theme (mounted by ~/Projects/local-keycloak)
-                and the production realm import
+keycloak/       sample realm import + login theme, and the production realm import
 docs/           form field map
 ```
 
