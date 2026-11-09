@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-09
+
+### Changed
+
+- The footer now places the disclaimers on one centered line between the
+  author credit and the version, wrapping only when the screen is too narrow.
+
 ## [0.3.1] - 2026-11-09
 
 ### Changed
