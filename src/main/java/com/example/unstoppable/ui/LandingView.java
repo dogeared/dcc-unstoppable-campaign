@@ -73,6 +73,8 @@ public class LandingView extends VerticalLayout {
         disclaimer.addClassName("landing-footer");
         disclaimer.add(new Span("An unofficial companion. "
                 + "Dungeon Crawler Carl is © and ™ Matt Dinniman, LLC."));
+        disclaimer.add(new Span("Dungeon Crawler Carl: Unstoppable is "
+                + "© 2026 Renegade Game Studios."));
 
         inner.add(brand, eyebrow, title, copy, actions, rule, disclaimer);
         add(inner, new AppFooter());

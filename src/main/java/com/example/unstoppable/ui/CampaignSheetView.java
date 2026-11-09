@@ -1,10 +1,16 @@
 package com.example.unstoppable.ui;
 
+import com.example.unstoppable.domain.AccessRole;
 import com.example.unstoppable.domain.CampaignStatus;
 import com.example.unstoppable.service.CampaignNotFoundException;
 import com.example.unstoppable.service.CampaignService;
 import com.example.unstoppable.service.CampaignSheet;
 import com.example.unstoppable.service.CurrentUser;
+import com.example.unstoppable.service.InviteService;
+import com.example.unstoppable.ui.component.SharePanel;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -32,13 +38,16 @@ public class CampaignSheetView extends VerticalLayout implements BeforeEnterObse
     private static final Logger log = LoggerFactory.getLogger(CampaignSheetView.class);
 
     private final CampaignService campaignService;
+    private final InviteService inviteService;
     private final CurrentUser currentUser;
 
     private UUID campaignId;
     private CampaignSheet sheet;
 
-    public CampaignSheetView(CampaignService campaignService, CurrentUser currentUser) {
+    public CampaignSheetView(CampaignService campaignService, InviteService inviteService,
+            CurrentUser currentUser) {
         this.campaignService = campaignService;
+        this.inviteService = inviteService;
         this.currentUser = currentUser;
         setPadding(false);
         setSpacing(false);
@@ -113,13 +122,28 @@ public class CampaignSheetView extends VerticalLayout implements BeforeEnterObse
         Anchor back = new Anchor("campaigns", "All campaigns");
         back.addClassName("btn-ghost");
         actions.add(back);
+        if (sheet.role() == AccessRole.OWNER) {
+            Button share = new Button("Share", event -> openShareDialog());
+            share.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            actions.add(share);
+        }
         if (sheet.canEdit()) {
             Anchor edit = new Anchor("campaigns/" + sheet.id() + "/edit", "Edit sheet");
-            edit.addClassName("btn-primary");
+            edit.addClassName(sheet.role() == AccessRole.OWNER ? "btn-ghost" : "btn-primary");
             actions.add(edit);
         }
         head.add(actions);
         return head;
+    }
+
+    private void openShareDialog() {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Share this campaign");
+        dialog.setWidth("min(760px, 96vw)");
+        dialog.add(new SharePanel(inviteService, currentUser, campaignId));
+        Button close = new Button("Close", event -> dialog.close());
+        dialog.getFooter().add(close);
+        dialog.open();
     }
 
     private Div scoreboard() {

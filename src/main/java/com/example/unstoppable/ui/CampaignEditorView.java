@@ -8,12 +8,11 @@ import com.example.unstoppable.service.CampaignService;
 import com.example.unstoppable.service.CampaignSheet;
 import com.example.unstoppable.service.CurrentUser;
 import com.example.unstoppable.service.InviteService;
-import com.example.unstoppable.service.InviteView;
 import com.example.unstoppable.ui.component.AchievementDialog;
 import com.example.unstoppable.ui.component.AttemptDialog;
 import com.example.unstoppable.ui.component.DeckSlotDialog;
 import com.example.unstoppable.ui.component.PurchaseDialog;
-import com.vaadin.flow.component.UI;
+import com.example.unstoppable.ui.component.SharePanel;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -37,7 +36,6 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.VaadinRequest;
 import jakarta.annotation.security.PermitAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -592,127 +590,7 @@ public class CampaignEditorView extends VerticalLayout implements BeforeEnterObs
     // ---- share --------------------------------------------------------------
 
     private Div shareTab() {
-        Div body = new Div();
-        body.addClassName("tab-body");
-
-        Div card = new Div();
-        card.addClassName("form-card");
-        card.add(new H2("Invite the party"));
-        card.add(new Paragraph("Invite links are reusable until you revoke them. "
-                + "Viewers can read the sheet; editors can change it."));
-
-        ComboBox<AccessRole> role = new ComboBox<>("Role");
-        role.setItems(AccessRole.VIEWER, AccessRole.EDITOR);
-        role.setItemLabelGenerator(value -> value.name().toLowerCase());
-        role.setValue(AccessRole.EDITOR);
-
-        IntegerField days = new IntegerField("Expires after (days)");
-        days.setMin(0);
-        days.setValue(30);
-        days.setHelperText("0 means the link never expires.");
-
-        FormLayout form = new FormLayout(role, days);
-        form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-                new FormLayout.ResponsiveStep("420px", 2));
-
-        Button create = new Button("Create invite link", event -> {
-            try {
-                InviteService.CreatedInvite invite = inviteService.create(campaignId,
-                        currentUser.id(), role.getValue(), days.getValue());
-                String url = inviteLink(invite.token());
-                reload();
-                showInviteLink(url);
-            } catch (RuntimeException exception) {
-                Ui.error(exception.getMessage());
-            }
-        });
-        create.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        Div actions = new Div();
-        actions.addClassName("form-actions");
-        actions.add(create);
-        card.add(form, actions);
-        body.add(card);
-
-        List<InviteView> invites = inviteService.list(campaignId, currentUser.id());
-        body.add(new H2("Active and past links"));
-        if (invites.isEmpty()) {
-            body.add(new Paragraph("No invite links yet."));
-        } else {
-            Grid<InviteView> grid = new Grid<>();
-            grid.addColumn(invite -> invite.role().name().toLowerCase()).setHeader("Role")
-                    .setAutoWidth(true);
-            grid.addColumn(invite -> invite.createdAt().toString().substring(0, 10))
-                    .setHeader("Created").setAutoWidth(true);
-            grid.addColumn(invite -> invite.expiresAt() == null ? "never"
-                    : invite.expiresAt().toString().substring(0, 10))
-                    .setHeader("Expires").setAutoWidth(true);
-            grid.addComponentColumn(invite -> chip(invite.usable() ? "usable" : "revoked",
-                    invite.usable() ? "chip-accent" : "chip-danger"))
-                    .setHeader("Status").setAutoWidth(true);
-            grid.addComponentColumn(invite -> {
-                Button revoke = new Button("Revoke", event -> confirm(
-                        "Revoke this link?",
-                        "Anyone using it will lose access on their next request.",
-                        () -> {
-                            inviteService.revoke(campaignId, currentUser.id(), invite.id());
-                            reload();
-                        }));
-                revoke.setEnabled(invite.usable());
-                revoke.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
-                        ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
-                return revoke;
-            }).setHeader("").setAutoWidth(true);
-            grid.setItems(invites);
-            grid.setAllRowsVisible(true);
-            grid.addClassName("editor-grid");
-            body.add(grid);
-        }
-        return body;
-    }
-
-    private void showInviteLink(String url) {
-        Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Invite link ready");
-        dialog.setWidth("min(560px, 94vw)");
-        TextField link = new TextField("Share this URL");
-        link.setValue(url);
-        link.setReadOnly(true);
-        link.setWidthFull();
-        Button copy = new Button("Copy", event -> {
-            UI.getCurrent().getPage().executeJs(
-                    "window.Unstoppable.copyText($0)", url);
-            Ui.success("Link copied");
-        });
-        copy.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button close = new Button("Close", event -> dialog.close());
-        dialog.add(link);
-        dialog.getFooter().add(close, copy);
-        dialog.open();
-    }
-
-    private String inviteLink(String token) {
-        VaadinRequest request = VaadinRequest.getCurrent();
-        String host = firstHeader(request, "X-Forwarded-Host", "Host");
-        if (host == null) {
-            return "/join/" + token;
-        }
-        String proto = firstHeader(request, "X-Forwarded-Proto");
-        if (proto == null) {
-            proto = request.isSecure() ? "https" : "http";
-        }
-        String context = request.getContextPath() == null ? "" : request.getContextPath();
-        return proto + "://" + host + context + "/join/" + token;
-    }
-
-    private static String firstHeader(VaadinRequest request, String... names) {
-        for (String name : names) {
-            String value = request.getHeader(name);
-            if (value != null && !value.isBlank()) {
-                return value.split(",")[0].trim();
-            }
-        }
-        return null;
+        return new SharePanel(inviteService, currentUser, campaignId);
     }
 
     // ---- helpers ------------------------------------------------------------

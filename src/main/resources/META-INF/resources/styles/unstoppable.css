@@ -1353,6 +1353,10 @@ vaadin-integer-field {
   line-height: 1.5;
 }
 
+.landing-footer span {
+  display: block;
+}
+
 .join-view {
   min-height: 100vh;
   display: grid;
