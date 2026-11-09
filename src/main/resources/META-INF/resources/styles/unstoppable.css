@@ -161,6 +161,13 @@ p {
   line-height: 1.5;
 }
 
+.app-footer-made {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em;
+}
+
 .app-footer-heart {
   color: var(--u-accent);
 }

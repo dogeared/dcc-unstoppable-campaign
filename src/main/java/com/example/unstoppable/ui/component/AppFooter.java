@@ -22,14 +22,18 @@ public class AppFooter extends Footer {
 
         Span heart = new Span("\u2764\ufe0f");
         heart.addClassName("app-footer-heart");
+        heart.getElement().setAttribute("aria-hidden", "true");
 
         Anchor author = new Anchor(GITHUB_URL, "dogeared");
         author.addClassName("app-footer-author");
         author.getElement().setAttribute("target", "_blank");
         author.getElement().setAttribute("rel", "noopener noreferrer");
 
-        Span made = new Span("Made with ");
-        made.add(heart, new Span(" by "), author);
+        // Keep the credit words as separate items and let the flex gap supply the
+        // spacing, so leading/trailing text-node whitespace cannot collapse.
+        Span made = new Span(new Span("Made with"), heart, new Span("by"), author);
+        made.addClassName("app-footer-made");
+        made.getElement().setAttribute("aria-label", "Made with love by dogeared");
 
         Span version = new Span("v" + resolveVersion());
         version.addClassName("app-footer-version");
