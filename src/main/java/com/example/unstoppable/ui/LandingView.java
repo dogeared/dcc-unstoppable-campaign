@@ -1,6 +1,7 @@
 package com.example.unstoppable.ui;
 
 import com.example.unstoppable.service.CurrentUser;
+import com.example.unstoppable.ui.component.AppFooter;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -74,6 +75,6 @@ public class LandingView extends VerticalLayout {
                 + "Dungeon Crawler Carl is © and ™ Matt Dinniman, LLC."));
 
         inner.add(brand, eyebrow, title, copy, actions, rule, disclaimer);
-        add(inner);
+        add(inner, new AppFooter());
     }
 }

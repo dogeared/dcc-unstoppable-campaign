@@ -18,7 +18,10 @@ class LandingViewTest extends SpringBrowserlessTest {
     void anonymousVisitorSeesLoginAndRegister() {
         navigate(LandingView.class);
 
-        List<Anchor> anchors = find(Anchor.class).all();
+        List<Anchor> anchors = find(Anchor.class).all().stream()
+                .filter(anchor -> anchor.getHref() != null
+                        && anchor.getHref().startsWith("/oauth2/authorization/keycloak"))
+                .toList();
         assertEquals(List.of("Log in", "Register"),
                 anchors.stream().map(Anchor::getText).toList());
         assertEquals("/oauth2/authorization/keycloak", anchors.getFirst().getHref());

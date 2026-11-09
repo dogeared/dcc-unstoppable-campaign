@@ -1,7 +1,9 @@
 package com.example.unstoppable.ui;
 
 import com.example.unstoppable.service.CurrentUser;
+import com.example.unstoppable.ui.component.AppFooter;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Header;
@@ -16,6 +18,9 @@ import jakarta.annotation.security.PermitAll;
 
 @PermitAll
 public class MainLayout extends AppLayout {
+
+    private final Div contentArea = new Div();
+    private final AppFooter footer = new AppFooter();
 
     public MainLayout(CurrentUser currentUser, AuthenticationContext authenticationContext) {
         addClassName("app-shell");
@@ -35,7 +40,20 @@ public class MainLayout extends AppLayout {
         addToNavbar(header);
 
         addToDrawer(drawer(authenticationContext));
+        contentArea.addClassName("app-content");
+        setContent(contentArea);
         setDrawerOpened(false);
+    }
+
+    @Override
+    public void showRouterLayoutContent(HasElement content) {
+        contentArea.removeAll();
+        if (content instanceof Component component) {
+            Div view = new Div(component);
+            view.addClassName("app-content-view");
+            contentArea.add(view);
+        }
+        contentArea.add(footer);
     }
 
     private static RouterLink brand() {
