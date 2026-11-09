@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-11-09
+
+### Changed
+
+- Regenerated the Vaadin frontend manifest and lock file so local builds no
+  longer rewrite `package.json`. The generated `@vaadin/*` dependencies and
+  version pins now match the 25.3.5 BOM.
+
 ## [0.1.6] - 2026-11-09
 
 ### Added
