@@ -8,6 +8,7 @@ import java.util.UUID;
 public record InviteView(
         UUID id,
         AccessRole role,
+        boolean publicAccess,
         Instant createdAt,
         Instant expiresAt,
         Instant revokedAt,

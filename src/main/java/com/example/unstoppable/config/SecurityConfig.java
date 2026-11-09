@@ -18,7 +18,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http,
             ClientRegistrationRepository clientRegistrationRepository) throws Exception {
         http.authorizeHttpRequests(requests -> requests
-                .requestMatchers("/", "/login", "/actuator/health",
+                .requestMatchers("/", "/login", "/join/**", "/actuator/health",
                         "/actuator/health/**", "/favicon.ico", "/styles/**",
                         "/images/**", "/VAADIN/**")
                 .permitAll());

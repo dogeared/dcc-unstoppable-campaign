@@ -392,6 +392,18 @@ vaadin-drawer-toggle,
   width: 100%;
 }
 
+.sheet-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.4rem;
+  width: 100%;
+}
+
+.sheet-content > * {
+  width: 100%;
+}
+
 .page-head {
   display: flex;
   align-items: flex-end;
@@ -1483,6 +1495,12 @@ vaadin-integer-field {
   .landing-actions .btn-ghost {
     width: 100%;
   }
+}
+
+.invite-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 /* Vaadin overlay chrome picks up the same ink and gold. */

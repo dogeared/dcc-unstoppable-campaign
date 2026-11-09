@@ -168,7 +168,7 @@ successful attempt.
 | `FloorAttempt` | `id`, `campaignId`, `floorNumber`, `playedAt`, `successful`, `notes` |
 | `Achievement` | `id`, `campaignId`, `floorNumber`, `name`, `xp`, `completedAt` — unique `(campaignId, name)` |
 | `Purchase` | `id`, `campaignId`, `participantId`, `benefit`, `cost`, `xValue`, `targetDeckEntryId`, `targetCard`, `notes`, `purchasedAt` |
-| `CampaignInvite` | `id`, `campaignId`, `tokenHash`, `role`, `createdBySubject`, `expiresAt`, `revokedAt` |
+| `CampaignInvite` | `id`, `campaignId`, `tokenHash`, `role`, `publicAccess`, `createdBySubject`, `expiresAt`, `revokedAt` |
 
 `FloorProgress.defeats` and `FloorProgress.floorScore` are proposed as **derived
 read-model values** from `FloorAttempt` and `Achievement`, not stored editable

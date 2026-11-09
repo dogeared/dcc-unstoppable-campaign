@@ -27,8 +27,11 @@ Flyway, and Keycloak (OIDC).
   successful attempt marks the floor cleared. Achievement XP still counts after
   a loss; boss/quest XP is entered manually and only makes sense after a win.
 - **Sharing** uses role-scoped, reusable invite links (viewer or editor) owned by
-  the campaign owner. Tokens are stored as SHA-256 hashes; the raw link is shown
-  once, when it is created.
+  the campaign owner. Links are private by default; a viewer link can be made
+  public so anyone with the URL can read the sheet without signing in. Editor
+  links are always private. Tokens are stored as SHA-256 hashes; the raw link is
+  shown once, when it is created, and owners can change a link's role or
+  visibility without changing its URL.
 - **Auth** is Keycloak OIDC. The app stores the immutable Keycloak subject, so
   renaming or re-emailing a user does not lose ownership.
 
@@ -152,7 +155,7 @@ mvn -Pproduction package
 ```
 
 The production profile builds the Vaadin frontend bundle. The resulting jar is
-`target/unstoppable-0.3.3.jar`.
+`target/unstoppable-0.4.0.jar`.
 
 The Docker image is a two-stage build (Maven build, then Temurin 21 JRE):
 
@@ -268,9 +271,12 @@ Restart `cloudflared`. The app is then available at
 | Viewer | yes | no | no |
 
 Invite links are generated per role, can expire (`0` = never), and are revoked
-individually. Redeeming a link creates a `campaign_membership` row for the
-signed-in Keycloak subject; redeeming a stronger link upgrades an existing
-viewer to editor.
+individually. New links are private unless the owner marks them public. Public
+viewer links can be opened without signing in and render the sheet read-only;
+editor links must stay private. Owners can edit an existing link's role or
+visibility at any time. Redeeming a private link creates a
+`campaign_membership` row for the signed-in Keycloak subject; redeeming a
+stronger link upgrades an existing viewer to editor.
 
 ## Project layout
 
